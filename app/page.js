@@ -1,4 +1,6 @@
 import HeroScrub from "@/components/HeroScrub";
+import Histoire from "@/components/Histoire";
+import Reveal from "@/components/Reveal";
 import Starfield from "@/components/Starfield";
 import Nav from "@/components/Nav";
 import Vela from "@/components/Vela";
@@ -16,10 +18,12 @@ export default function Home() {
     <div className="page">
       <Starfield count={90} seed={48271} />
       <Nav />
+      <Reveal />
       <main>
         <HeroScrub />
         <Vela />
         <Workflow />
+        <Histoire />
         <Products />
         <Custom />
         <Demarche />

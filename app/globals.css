@@ -26,8 +26,12 @@ section[id]{scroll-margin-top:80px}
 @keyframes nx-ring{0%,100%{opacity:.5}50%{opacity:1}}
 @keyframes nx-glow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
 @keyframes nx-dash{to{stroke-dashoffset:-120}}
-@keyframes nx-rise{from{transform:translateY(18px)}to{transform:none}}
-[data-reveal]{animation:nx-rise .8s cubic-bezier(.22,.61,.36,1) both}
+/* Reveal au scroll : l'état initial est masqué, .nx-in (IntersectionObserver) révèle */
+[data-reveal]{opacity:0;transform:translateY(20px);transition:opacity .7s ease,transform .7s cubic-bezier(.22,.61,.36,1)}
+[data-reveal].nx-in{opacity:1;transform:none}
+@media (prefers-reduced-motion: reduce){
+  [data-reveal]{opacity:1;transform:none;transition:none}
+}
 
 /* ---------- Layout ---------- */
 .page{
@@ -62,6 +66,8 @@ section[id]{scroll-margin-top:80px}
   .wrap{padding:0 22px}
   .nav-links,.nav-secondary{display:none}
   .grid-3{grid-template-columns:1fr !important}
+  .next-card{grid-template-columns:1fr !important}
+  .next-card img{max-height:240px}
   .split{grid-template-columns:1fr !important;gap:32px !important}
   .proof-grid{grid-template-columns:1fr !important;gap:28px !important}
   .footer-grid{grid-template-columns:1fr 1fr !important;gap:28px !important}
