@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/* ============================================================
+   Cieva — "Nebula" (dark · orbital · purple/blue)
+   Source de vérité : maquette Cieva.dc.html (hors repo)
+   ============================================================ */
+
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:#05060E;
+  color:#E8EAF6;
+  font-family:'Hanken Grotesk',system-ui,sans-serif;
+  -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility;
+  overflow-x:hidden;
+}
+a{color:inherit;text-decoration:none}
+h1,h2,h3,p{margin:0}
+section[id]{scroll-margin-top:80px}
+
+/* ---------- Keyframes (portées du mockup) ---------- */
+@keyframes nx-tw{0%,100%{opacity:.15}50%{opacity:.85}}
+@keyframes nx-float{0%,100%{transform:translateY(0)}50%{transform:translateY(-9px)}}
+@keyframes nx-ring{0%,100%{opacity:.5}50%{opacity:1}}
+@keyframes nx-glow{0%,100%{filter:brightness(1)}50%{filter:brightness(1.18)}}
+@keyframes nx-dash{to{stroke-dashoffset:-120}}
+@keyframes nx-rise{from{transform:translateY(18px)}to{transform:none}}
+[data-reveal]{animation:nx-rise .8s cubic-bezier(.22,.61,.36,1) both}
+
+/* ---------- Layout ---------- */
+.page{
+  position:relative;
+  min-height:100vh;
+  background:
+    radial-gradient(1100px 600px at 50% -10%,rgba(96,72,220,.22),transparent 60%),
+    linear-gradient(180deg,#070915 0%,#05060E 40%,#05060E 100%);
+  color:#E8EAF6;
+  overflow-x:clip; /* hidden casserait position:sticky (hero scrub + nav) */
+}
+.wrap{max-width:1080px;margin:0 auto;padding:0 32px}
+
+/* ---------- Hover / link utilities ---------- */
+.lnk{transition:color .18s}
+.lnk:hover{color:#fff}
+.btn-glow{transition:box-shadow .2s,background .2s}
+.soft{transition:background .2s}
+.soft:hover{background:rgba(255,255,255,.1)}
+.pcard{border:1px solid var(--bc);transition:border-color .2s}
+.pcard:hover{border-color:var(--bch)}
+.qcard{transition:background .2s}
+.qcard:hover{background:rgba(255,255,255,.05)}
+
+/* ---------- Headings ---------- */
+.h2{margin:0 0 12px;font:600 clamp(28px,3.2vw,40px)/1.12 'Space Grotesk',sans-serif;letter-spacing:-.02em;color:#F2F4FF}
+.lead{margin:0 auto;max-width:460px;font:400 16px/1.6 'Hanken Grotesk',sans-serif;color:#9AA2C4}
+.grad{background:linear-gradient(120deg,#9B8CFF,#4FD6FF);-webkit-background-clip:text;background-clip:text;color:transparent}
+
+/* ---------- Responsive ---------- */
+@media (max-width:900px){
+  .wrap{padding:0 22px}
+  .nav-links,.nav-secondary{display:none}
+  .grid-3{grid-template-columns:1fr !important}
+  .split{grid-template-columns:1fr !important;gap:32px !important}
+  .proof-grid{grid-template-columns:1fr !important;gap:28px !important}
+  .footer-grid{grid-template-columns:1fr 1fr !important;gap:28px !important}
+  .float-card{display:none !important}
+  .orbital{height:300px !important;margin-top:8px !important}
+  .workflow-grid{display:none !important}
+  .workflow-mobile{display:flex !important}
+}
+@media (min-width:901px){
+  .workflow-mobile{display:none !important}
+}
+
+/* ---------- Accessibilité ---------- */
+@media (prefers-reduced-motion:reduce){
+  *{animation:none !important;scroll-behavior:auto !important}
+}
