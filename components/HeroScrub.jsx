@@ -15,9 +15,10 @@ export default function HeroScrub() {
   const imagesRef = useRef([]);
   const frameRef = useRef(-1);
   const [reducedMotion, setReducedMotion] = useState(false);
-  // À 100 % de scrub, le canvas s'efface (250 ms) sur hero-last.png posé dessous :
-  // raccord invisible avec la suite de la page.
+  // Les états de repos affichent les originaux 4K (hero-first/hero-last), bien plus
+  // nets que la vidéo 1080p : le canvas ne sert que pendant le mouvement.
   const [atEnd, setAtEnd] = useState(false);
+  const [atStart, setAtStart] = useState(true);
 
   useEffect(() => {
     const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
@@ -77,6 +78,7 @@ export default function HeroScrub() {
         const scrolled = Math.min(Math.max(-el.getBoundingClientRect().top, 0), total);
         const p = total > 0 ? scrolled / total : 0;
         setAtEnd(p >= 0.999);
+        setAtStart(p <= 0.005);
         const idx = Math.min(FRAME_COUNT - 1, Math.round(p * (FRAME_COUNT - 1)));
         if (idx !== frameRef.current) {
           const img = imagesRef.current[idx];
@@ -102,20 +104,31 @@ export default function HeroScrub() {
   return (
     <section ref={wrapRef} data-screen-label="HeroScrub" style={{ height: "260vh", position: "relative", zIndex: 2 }}>
       <div style={{ position: "sticky", top: 0, height: "100vh", overflow: "hidden" }}>
-        {/* Dernière frame en fond permanent : le canvas se fond dessus au raccord */}
+        {/* Image finale 4K en fond permanent : le canvas se fond dessus au raccord */}
         <img
-          src={`${BASE}/hero-last.png`}
+          src={`${BASE}/hero-last.webp`}
           alt=""
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
         />
         {!reducedMotion && (
-          <canvas
-            ref={canvasRef}
-            style={{
-              position: "absolute", inset: 0, width: "100%", height: "100%",
-              opacity: atEnd ? 0 : 1, transition: "opacity 250ms ease",
-            }}
-          />
+          <>
+            <canvas
+              ref={canvasRef}
+              style={{
+                position: "absolute", inset: 0, width: "100%", height: "100%",
+                opacity: atEnd ? 0 : 1, transition: "opacity 250ms ease",
+              }}
+            />
+            {/* Image de départ 4K par-dessus tant qu'on n'a pas scrollé */}
+            <img
+              src={`${BASE}/hero-first.webp`}
+              alt=""
+              style={{
+                position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover",
+                opacity: atStart ? 1 : 0, transition: "opacity 250ms ease", pointerEvents: "none",
+              }}
+            />
+          </>
         )}
 
         {/* voile bas pour la lisibilité du texte, quel que soit le contenu de la frame */}
