@@ -41,20 +41,33 @@ components/
   Nav · Vela · Workflow · Products · Custom · Demarche · Proof · Faq · Cta · Footer
   Logo · Starfield
 public/
-  hero-frames/     # 72 frames webp de la séquence du hero
-  hero-last.png    # dernière frame, fond du raccord vers la suite de la page
+  phone.glb        # modèle 3D du téléphone (hero)
 ```
 
-## Hero
+## Hero 3D interactif
 
-La transition « paperasse en désordre → interface propre » est une séquence de 72 images
-pilotée par la position de scroll : un canvas plein écran, épinglé (`position: sticky`),
-dessine la frame correspondant à la progression. Le titre et les CTA restent en HTML
-par-dessus. À 100 %, le canvas se fond (250 ms) sur `hero-last.png` posé dessous, et la
-page continue sur un fond continu. `prefers-reduced-motion` affiche l'image finale statique.
+Le hero (`Hero3D.jsx` + `Hero3DScene.jsx`, three.js via react-three-fiber) : un téléphone
+au centre, 7 objets métier en orbite (emails, dossiers, factures, en géométrie simple).
+Le drag horizontal fait tourner l'ensemble (inertie + ressort de retour face caméra) ;
+la rotation cumulée aspire les objets un par un dans le téléphone. Une fois tout absorbé
+et le téléphone revenu de face, une **UI générique dessinée en HTML/CSS** (sidebar, KPI,
+courbe, listes — aucun texte réel) s'allume sur l'écran, élément par élément. Elle n'est
+jamais visible pendant la rotation. Pas de détournement de scroll : la page défile
+normalement. Le titre et les CTA restent en HTML par-dessus.
+
+Points durs à connaître :
+- Le glb ne contient **pas de mesh écran** (2 coques sombres) et le téléphone est **posé
+  en diagonale dans son espace local**. Le composant le redresse par **PCA** (axe fin =
+  normale écran, axe long = vertical) puis raffine yaw/pitch/roll en minimisant les
+  extents projetés. Ne pas caler d'angle à la main.
+- `side: FrontSide` forcé partout (le dos-miroir venait de matériaux double face).
+- Le rect écran (pour poser l'UI HTML) = face avant de la bbox du téléphone aligné,
+  projetée en pixels, avec marge de bordure.
+- La rotation d'alignement est **composée** (`premultiply`) — le double-mount de React
+  en dev annulerait un simple `copy`.
 
 Note CSS : `.page` doit rester en `overflow-x: clip` — un `overflow: hidden` casserait le
-`position: sticky` du hero et de la nav.
+`position: sticky` de la nav.
 
 ## Design
 

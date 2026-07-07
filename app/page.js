@@ -1,4 +1,4 @@
-import HeroScrub from "@/components/HeroScrub";
+import Hero3D from "@/components/Hero3D";
 import Histoire from "@/components/Histoire";
 import Reveal from "@/components/Reveal";
 import Starfield from "@/components/Starfield";
@@ -20,7 +20,7 @@ export default function Home() {
       <Nav />
       <Reveal />
       <main>
-        <HeroScrub />
+        <Hero3D />
         <Vela />
         <Workflow />
         <Histoire />
