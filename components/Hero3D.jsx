@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 // Canvas 3D chargé côté client uniquement (pas de SSR de three.js)
 const Hero3DScene = dynamic(() => import("./Hero3DScene"), { ssr: false });
@@ -88,16 +88,22 @@ function ScreenUI({ rect, on }) {
 }
 
 export default function Hero3D() {
-  const ctrl = useRef({ angle: 0, vel: 0, turn: 0, dragging: false, lastX: 0, lastT: 0 });
+  const ctrl = useRef({ angle: 0, vel: 0, turn: 0, dragging: false, lastX: 0, lastT: 0, lastAt: Infinity });
   const [uiOn, setUiOn] = useState(false);
   const [rect, setRect] = useState(null);
   const [hasDragged, setHasDragged] = useState(false);
+
+  // point de départ du compte à rebours d'auto-aspiration
+  useEffect(() => {
+    ctrl.current.lastAt = performance.now();
+  }, []);
 
   const onDown = (e) => {
     const s = ctrl.current;
     s.dragging = true;
     s.lastX = e.clientX;
     s.lastT = performance.now();
+    s.lastAt = performance.now();
     setUiOn(false);
     e.currentTarget.setPointerCapture?.(e.pointerId);
   };
@@ -113,6 +119,7 @@ export default function Hero3D() {
     s.turn += Math.abs(da);
     s.lastX = e.clientX;
     s.lastT = now;
+    s.lastAt = now;
     if (!hasDragged && s.turn > 0.3) setHasDragged(true);
   };
   const onUp = () => {
@@ -184,7 +191,7 @@ export default function Hero3D() {
         <div
           style={{
             marginTop: 20, font: "500 13px 'Hanken Grotesk',sans-serif", letterSpacing: ".04em",
-            color: "#7C84A8", opacity: hasDragged ? 0 : 1, transition: "opacity .6s ease",
+            color: "#7C84A8", opacity: hasDragged || uiOn ? 0 : 1, transition: "opacity .6s ease",
           }}
         >
           Faites tourner le téléphone ↺

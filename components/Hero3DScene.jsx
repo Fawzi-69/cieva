@@ -6,8 +6,10 @@ import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-const N_OBJ = 7;
-const ABSORB_STEP = 1.4; // radians de rotation cumulée par objet aspiré
+const N_OBJ = 6;
+const ABSORB_STEP = 0.78; // radians de rotation cumulée par objet aspiré (~1,5 tour pour tout)
+const AUTO_DELAY = 6000; // ms sans interaction avant auto-aspiration
+const AUTO_RATE = 0.35; // rad/s de rotation "virtuelle" en auto
 const GROUP_SCALE = 0.62;
 const GROUP_Y = -0.05;
 
@@ -89,50 +91,68 @@ function Phone() {
   );
 }
 
-// ---------- Objets en orbite : enveloppes, dossiers, factures (low-poly) ----------
+// ---------- Objets en orbite : 6 objets métiers (couleur = produit) ----------
+const mat = (color, opt = {}) =>
+  new THREE.MeshStandardMaterial({ color, roughness: 0.55, metalness: 0.1, envMapIntensity: 0.9, ...opt });
+
 function makeItemMesh(kind) {
   const g = new THREE.Group();
-  if (kind === "email") {
-    const body = new THREE.Mesh(
-      new THREE.BoxGeometry(0.46, 0.32, 0.02),
-      new THREE.MeshStandardMaterial({ color: "#EDEFF8", roughness: 0.7, metalness: 0.05 })
+  const add = (geo, material, x = 0, y = 0, z = 0, rot) => {
+    const mesh = new THREE.Mesh(geo, material);
+    mesh.position.set(x, y, z);
+    if (rot) mesh.rotation.set(rot[0], rot[1], rot[2]);
+    g.add(mesh);
+    return mesh;
+  };
+
+  if (kind === "camion") {
+    // Sielo — transport (bleu)
+    add(new THREE.BoxGeometry(0.34, 0.2, 0.2), mat("#EDEFF8", { roughness: 0.6 }), -0.06, 0.04, 0); // caisse
+    add(new THREE.BoxGeometry(0.15, 0.15, 0.19), mat("#009FE3", { roughness: 0.4, metalness: 0.3 }), 0.19, 0.015, 0); // cabine
+    add(new THREE.BoxGeometry(0.14, 0.05, 0.185), mat("#0C7DB0"), 0.19, 0.078, 0); // toit cabine
+    const wheel = new THREE.CylinderGeometry(0.048, 0.048, 0.03, 18);
+    const wm = mat("#171B2E", { roughness: 0.8 });
+    [[-0.16, 0.09], [0.06, 0.09], [0.19, 0.09]].forEach(([x, zz]) => {
+      add(wheel, wm, x, -0.075, zz, [Math.PI / 2, 0, 0]);
+      add(wheel, wm, x, -0.075, -zz, [Math.PI / 2, 0, 0]);
+    });
+  } else if (kind === "colis") {
+    // logistique — carton
+    add(new THREE.BoxGeometry(0.26, 0.2, 0.22), mat("#C9A06C", { roughness: 0.85 }));
+    add(new THREE.BoxGeometry(0.262, 0.202, 0.05), mat("#E4D3AE", { roughness: 0.8 })); // scotch
+    add(new THREE.BoxGeometry(0.05, 0.202, 0.222), mat("#E4D3AE", { roughness: 0.8 }));
+  } else if (kind === "casque") {
+    // Vela — chantier (violet)
+    add(
+      new THREE.SphereGeometry(0.15, 24, 14, 0, Math.PI * 2, 0, Math.PI / 2),
+      mat("#7C5CFF", { roughness: 0.35, metalness: 0.15, envMapIntensity: 1.1 })
     );
-    const flap = new THREE.Mesh(
-      new THREE.ConeGeometry(0.23, 0.15, 4),
-      new THREE.MeshStandardMaterial({ color: "#D8DCEE", roughness: 0.7 })
-    );
-    flap.rotation.z = Math.PI;
-    flap.rotation.y = Math.PI / 4;
-    flap.scale.set(1, 1, 0.12);
-    flap.position.set(0, 0.085, 0.012);
-    g.add(body, flap);
-  } else if (kind === "dossier") {
-    const back = new THREE.Mesh(
-      new THREE.BoxGeometry(0.52, 0.38, 0.015),
-      new THREE.MeshStandardMaterial({ color: "#D9C49A", roughness: 0.8 })
-    );
-    const tab = new THREE.Mesh(
-      new THREE.BoxGeometry(0.18, 0.06, 0.015),
-      new THREE.MeshStandardMaterial({ color: "#D9C49A", roughness: 0.8 })
-    );
-    tab.position.set(-0.15, 0.215, 0);
-    const front = new THREE.Mesh(
-      new THREE.BoxGeometry(0.52, 0.34, 0.012),
-      new THREE.MeshStandardMaterial({ color: "#E6D4AC", roughness: 0.8 })
-    );
-    front.position.set(0, -0.02, 0.015);
-    g.add(back, tab, front);
+    add(new THREE.CylinderGeometry(0.2, 0.21, 0.022, 26), mat("#6A4EE0", { roughness: 0.4 }), 0, 0.0, 0);
+    add(new THREE.BoxGeometry(0.09, 0.02, 0.3), mat("#6A4EE0", { roughness: 0.4 }), 0, 0.11, 0); // arête
+  } else if (kind === "outils") {
+    // Vela — boîte à outils
+    add(new THREE.BoxGeometry(0.32, 0.15, 0.14), mat("#B49BFF", { roughness: 0.4, metalness: 0.35 }));
+    add(new THREE.BoxGeometry(0.32, 0.03, 0.14), mat("#9D82F5", { roughness: 0.4, metalness: 0.35 }), 0, 0.09, 0); // couvercle
+    add(new THREE.BoxGeometry(0.12, 0.035, 0.03), mat("#2A2F4E", { roughness: 0.5 }), 0, 0.125, 0); // poignée
+    add(new THREE.BoxGeometry(0.04, 0.05, 0.145), mat("#2A2F4E"), 0, 0.02, 0); // fermoir
+  } else if (kind === "combine") {
+    // Lyra — casque-micro d'accueil vocal (teal)
+    const tm = mat("#12A594", { roughness: 0.35, metalness: 0.2, envMapIntensity: 1.1 });
+    const dark = mat("#0C7264", { roughness: 0.5 });
+    add(new THREE.TorusGeometry(0.13, 0.026, 12, 28, Math.PI), tm); // arceau
+    add(new THREE.CylinderGeometry(0.05, 0.05, 0.045, 18), dark, -0.13, -0.01, 0, [0, 0, Math.PI / 2]); // écouteur g
+    add(new THREE.CylinderGeometry(0.05, 0.05, 0.045, 18), dark, 0.13, -0.01, 0, [0, 0, Math.PI / 2]); // écouteur d
+    add(new THREE.CylinderGeometry(0.012, 0.012, 0.14, 10), tm, 0.09, -0.09, 0.03, [0, 0, 0.9]); // perche micro
+    add(new THREE.SphereGeometry(0.028, 14, 10), dark, 0.02, -0.13, 0.045); // micro
   } else {
-    const sheet = new THREE.Mesh(
-      new THREE.BoxGeometry(0.34, 0.46, 0.01),
-      new THREE.MeshStandardMaterial({ color: "#F2F4FB", roughness: 0.65 })
-    );
-    const band = new THREE.Mesh(
-      new THREE.BoxGeometry(0.24, 0.05, 0.012),
-      new THREE.MeshStandardMaterial({ color: "#B9C2E2", roughness: 0.6 })
-    );
-    band.position.set(0, 0.14, 0.003);
-    g.add(sheet, band);
+    // calendrier — planning
+    add(new THREE.BoxGeometry(0.26, 0.3, 0.035), mat("#F2F4FB", { roughness: 0.6 }));
+    add(new THREE.BoxGeometry(0.26, 0.075, 0.037), mat("#4FA8FF", { roughness: 0.45 }), 0, 0.112, 0); // bandeau
+    const ring = new THREE.TorusGeometry(0.02, 0.007, 8, 14);
+    const rm = mat("#8891B8", { metalness: 0.7, roughness: 0.3 });
+    add(ring, rm, -0.07, 0.155, 0);
+    add(ring, rm, 0.07, 0.155, 0);
+    add(new THREE.BoxGeometry(0.055, 0.055, 0.038), mat("#7C5CFF", { roughness: 0.5 }), -0.06, -0.04, 0); // jour marqué
   }
   g.traverse((o) => {
     if (o.isMesh) o.material.side = THREE.FrontSide;
@@ -147,9 +167,9 @@ function Scene({ ctrl, onFacing, onRectReady }) {
   const facingRef = useRef(false);
   const t0 = useRef(0);
 
-  // Objets en orbite
+  // Objets en orbite : un par facette métier
   const defs = useMemo(() => {
-    const kinds = ["email", "dossier", "facture", "email", "facture", "dossier", "facture"];
+    const kinds = ["camion", "casque", "combine", "colis", "outils", "calendrier"];
     return Array.from({ length: N_OBJ }, (_, i) => ({
       mesh: makeItemMesh(kinds[i % kinds.length]),
       theta: (i / N_OBJ) * Math.PI * 2,
@@ -199,10 +219,15 @@ function Scene({ ctrl, onFacing, onRectReady }) {
     }
     r.rotation.y = s.angle;
 
+    // auto-aspiration : sans interaction, les objets finissent par entrer tout seuls
+    if (!s.dragging && performance.now() - s.lastAt > AUTO_DELAY && s.turn < N_OBJ * ABSORB_STEP) {
+      s.turn += AUTO_RATE * dt;
+    }
+
     // aspiration progressive, un objet à la fois
     const targetCount = Math.min(N_OBJ, Math.floor(s.turn / ABSORB_STEP));
     items.current.forEach((d, i) => {
-      if (i < targetCount && d.t < 1) d.t = Math.min(1, d.t + dt * 1.4);
+      if (i < targetCount && d.t < 1) d.t = Math.min(1, d.t + dt * 1.6);
       const e = d.t < 0.5 ? 2 * d.t * d.t : 1 - Math.pow(-2 * d.t + 2, 2) / 2;
       const th = d.theta + t0.current * d.speed + e * 5;
       const rad = d.radius * (1 - e);

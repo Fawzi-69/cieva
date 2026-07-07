@@ -37,8 +37,9 @@ app/
   page.js          # assemble hero + sections
   globals.css      # tokens + keyframes (thème Constellation)
 components/
-  HeroScrub.jsx    # hero : séquence d'images scrubbée au scroll (canvas sticky)
-  Nav · Vela · Workflow · Products · Custom · Demarche · Proof · Faq · Cta · Footer
+  Hero3D.jsx       # hero : section, drag, UI écran HTML/CSS, titre + CTA
+  Hero3DScene.jsx  # scène three.js (téléphone procédural + objets métier)
+  Nav · Vela · Workflow · Histoire · Products · Custom · Demarche · Proof · Faq · Cta · Footer
   Logo · Starfield
 public/
 ```
@@ -46,9 +47,13 @@ public/
 ## Hero 3D interactif
 
 Le hero (`Hero3D.jsx` + `Hero3DScene.jsx`, three.js via react-three-fiber) : un téléphone
-au centre, 7 objets métier en orbite (emails, dossiers, factures, en géométrie simple).
-Le drag horizontal fait tourner l'ensemble (inertie + ressort de retour face caméra) ;
-la rotation cumulée aspire les objets un par un dans le téléphone. Une fois tout absorbé
+au centre, 6 objets métier en orbite, chacun construit en géométrie procédurale et
+rattaché à un produit — camion bleu et colis (Sielo), casque de chantier violet et boîte
+à outils (Vela), casque-micro teal (Lyra), calendrier (planning). Le drag horizontal fait
+tourner l'ensemble (inertie + ressort de retour face caméra) ; la rotation cumulée aspire
+les objets un par un — le tout se boucle en un ou deux swipes. Sans interaction pendant
+6 s, une rotation automatique lente prend le relais pour que le visiteur passif voie
+quand même la séquence. Une fois tout absorbé
 et le téléphone revenu de face, une **UI générique dessinée en HTML/CSS** (sidebar, KPI,
 courbe, listes — aucun texte réel) s'allume sur l'écran, élément par élément. Elle n'est
 jamais visible pendant la rotation. Pas de détournement de scroll : la page défile
