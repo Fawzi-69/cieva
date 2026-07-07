@@ -4,6 +4,23 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { useGLTF } from "@react-three/drei";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
+import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
+
+// Environment map procédurale (reflets métal/verre) — aucun asset externe à charger
+function Env() {
+  const { gl, scene } = useThree();
+  useEffect(() => {
+    const pmrem = new THREE.PMREMGenerator(gl);
+    const tex = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    scene.environment = tex;
+    return () => {
+      scene.environment = null;
+      tex.dispose();
+      pmrem.dispose();
+    };
+  }, [gl, scene]);
+  return null;
+}
 
 const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
 const N_OBJ = 7;
@@ -89,8 +106,9 @@ function Scene({ ctrl, onFacing, onRectReady }) {
           if ("metalness" in m) m.metalness = 0;
           if ("roughness" in m) m.roughness = 0.55;
         } else {
-          if ("metalness" in m) m.metalness = 0.55;
-          if ("roughness" in m) m.roughness = 0.35;
+          if ("metalness" in m) m.metalness = 0.75;
+          if ("roughness" in m) m.roughness = 0.28;
+          if ("envMapIntensity" in m) m.envMapIntensity = 1.25;
         }
         m.needsUpdate = true;
       });
@@ -306,10 +324,14 @@ function Scene({ ctrl, onFacing, onRectReady }) {
 export default function Hero3DScene({ ctrl, onFacing, onRectReady }) {
   return (
     <Canvas camera={{ position: [0, 0, 4], fov: 35 }} dpr={[1, 2]} gl={{ antialias: true, alpha: true }} style={{ background: "transparent" }}>
-      <ambientLight intensity={0.9} />
-      <directionalLight position={[3, 5, 5]} intensity={2.2} />
-      <pointLight position={[-5, -1, 2]} intensity={60} color="#7B5CFF" />
-      <pointLight position={[5, 3, 3]} intensity={45} color="#4FA8FF" />
+      <Env />
+      <ambientLight intensity={0.35} />
+      {/* key light */}
+      <directionalLight position={[3, 5, 5]} intensity={2.6} />
+      {/* rim light froide, par l'arrière, pour détacher les tranches */}
+      <directionalLight position={[-3, 2, -4]} intensity={2.4} color="#9FC2FF" />
+      <pointLight position={[-5, -1, 2]} intensity={50} color="#7B5CFF" />
+      <pointLight position={[5, 3, 3]} intensity={40} color="#4FA8FF" />
       <pointLight position={[0, 0, -5]} intensity={40} color="#C05CFF" />
       <Scene ctrl={ctrl} onFacing={onFacing} onRectReady={onRectReady} />
     </Canvas>
