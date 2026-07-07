@@ -41,7 +41,6 @@ components/
   Nav · Vela · Workflow · Products · Custom · Demarche · Proof · Faq · Cta · Footer
   Logo · Starfield
 public/
-  phone.glb        # modèle 3D du téléphone (hero)
 ```
 
 ## Hero 3D interactif
@@ -56,15 +55,15 @@ jamais visible pendant la rotation. Pas de détournement de scroll : la page dé
 normalement. Le titre et les CTA restent en HTML par-dessus.
 
 Points durs à connaître :
-- Le glb ne contient **pas de mesh écran** (2 coques sombres) et le téléphone est **posé
-  en diagonale dans son espace local**. Le composant le redresse par **PCA** (axe fin =
-  normale écran, axe long = vertical) puis raffine yaw/pitch/roll en minimisant les
-  extents projetés. Ne pas caler d'angle à la main.
-- `side: FrontSide` forcé partout (le dos-miroir venait de matériaux double face).
-- Le rect écran (pour poser l'UI HTML) = face avant de la bbox du téléphone aligné,
-  projetée en pixels, avec marge de bordure.
-- La rotation d'alignement est **composée** (`premultiply`) — le double-mount de React
-  en dev annulerait un simple `copy`.
+- Le téléphone est **procédural** (RoundedBox : châssis métal, verre avant/arrière, îlot
+  caméra, boutons) — géométrie fermée par construction. L'ancien `phone.glb` était un mesh
+  ouvert non soudé (rendu creux) et a été abandonné.
+- `side: FrontSide` partout, rendu volumique via **RoomEnvironment** (PMREM procédural,
+  aucun asset externe) + key light et rim light froide.
+- Le verre avant est en `meshPhysicalMaterial` avec `specularIntensity` bas — sinon le
+  lobe spéculaire de la key light blanchit tout l'écran.
+- Le rect écran (pour poser l'UI HTML) est projeté depuis les dimensions connues du
+  téléphone (`SCREEN_W/H`), caméra fixe.
 
 Note CSS : `.page` doit rester en `overflow-x: clip` — un `overflow: hidden` casserait le
 `position: sticky` de la nav.

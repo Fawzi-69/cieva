@@ -1,12 +1,22 @@
 "use client";
 
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useGLTF } from "@react-three/drei";
+import { RoundedBox } from "@react-three/drei";
 import { useEffect, useMemo, useRef } from "react";
 import * as THREE from "three";
 import { RoomEnvironment } from "three/examples/jsm/environments/RoomEnvironment.js";
 
-// Environment map procédurale (reflets métal/verre) — aucun asset externe à charger
+const N_OBJ = 7;
+const ABSORB_STEP = 1.4; // radians de rotation cumulée par objet aspiré
+const GROUP_SCALE = 0.62;
+const GROUP_Y = -0.05;
+
+// Téléphone procédural : géométrie FERMÉE par construction (le glb d'origine était
+// un mesh ouvert, non soudé — cause du rendu creux ; voir NOTES).
+const BODY_W = 1.02, BODY_H = 2.1, BODY_D = 0.085, BODY_R = 0.1;
+const SCREEN_W = 0.93, SCREEN_H = 2.0;
+
+// Environment map procédurale (reflets métal/verre) — aucun asset externe
 function Env() {
   const { gl, scene } = useThree();
   useEffect(() => {
@@ -22,11 +32,62 @@ function Env() {
   return null;
 }
 
-const BASE = process.env.NEXT_PUBLIC_BASE_PATH || "";
-const N_OBJ = 7;
-const ABSORB_STEP = 1.4; // radians de rotation cumulée par objet aspiré
-const GROUP_SCALE = 0.62;
-const GROUP_Y = -0.05;
+function Phone() {
+  return (
+    <group>
+      {/* châssis métal */}
+      <RoundedBox args={[BODY_W, BODY_H, BODY_D]} radius={BODY_R * 0.7} smoothness={5}>
+        <meshStandardMaterial color="#39415F" metalness={0.95} roughness={0.32} envMapIntensity={1.4} />
+      </RoundedBox>
+      {/* verre avant (écran éteint) */}
+      <RoundedBox args={[SCREEN_W, SCREEN_H, 0.014]} radius={0.07} smoothness={5} position={[0, 0, BODY_D / 2]}>
+        <meshPhysicalMaterial color="#05070F" metalness={0} roughness={0.3} envMapIntensity={0.5} specularIntensity={0.25} />
+      </RoundedBox>
+      {/* verre arrière */}
+      <RoundedBox args={[SCREEN_W, SCREEN_H, 0.012]} radius={0.07} smoothness={5} position={[0, 0, -BODY_D / 2]}>
+        <meshStandardMaterial color="#232B4A" metalness={0.35} roughness={0.22} envMapIntensity={1.2} />
+      </RoundedBox>
+      {/* encoche caméra frontale (pastille) */}
+      <mesh position={[0, SCREEN_H / 2 - 0.09, BODY_D / 2 + 0.009]}>
+        <cylinderGeometry args={[0.028, 0.028, 0.006, 24]} />
+        <meshStandardMaterial color="#0B0E1A" metalness={0.2} roughness={0.35} />
+      </mesh>
+      {/* îlot caméra arrière */}
+      <group position={[-BODY_W / 2 + 0.26, BODY_H / 2 - 0.28, -BODY_D / 2 - 0.015]}>
+        <RoundedBox args={[0.36, 0.36, 0.035]} radius={0.09} smoothness={4}>
+          <meshStandardMaterial color="#2C3454" metalness={0.85} roughness={0.3} envMapIntensity={1.3} />
+        </RoundedBox>
+        {[[-0.075, 0.075], [0.075, -0.075]].map(([x, y], k) => (
+          <group key={k} position={[x, y, 0.02]}>
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <cylinderGeometry args={[0.062, 0.062, 0.02, 28]} />
+              <meshStandardMaterial color="#161B30" metalness={0.9} roughness={0.25} envMapIntensity={1.4} />
+            </mesh>
+            <mesh rotation={[Math.PI / 2, 0, 0]} position={[0, 0, 0.011]}>
+              <cylinderGeometry args={[0.034, 0.034, 0.004, 24]} />
+              <meshStandardMaterial color="#0A0E1E" metalness={0.3} roughness={0.1} envMapIntensity={2} />
+            </mesh>
+          </group>
+        ))}
+        {/* flash */}
+        <mesh rotation={[Math.PI / 2, 0, 0]} position={[0.095, 0.095, 0.02]}>
+          <cylinderGeometry args={[0.022, 0.022, 0.01, 20]} />
+          <meshStandardMaterial color="#E8E4D2" metalness={0.1} roughness={0.4} emissive="#3A3524" emissiveIntensity={0.4} />
+        </mesh>
+      </group>
+      {/* boutons tranche droite */}
+      {[0.52, 0.28].map((y, k) => (
+        <RoundedBox key={k} args={[0.016, k === 0 ? 0.2 : 0.14, 0.04]} radius={0.007} smoothness={3} position={[BODY_W / 2 + 0.004, y, 0]}>
+          <meshStandardMaterial color="#454E70" metalness={0.95} roughness={0.3} envMapIntensity={1.4} />
+        </RoundedBox>
+      ))}
+      {/* bouton tranche gauche */}
+      <RoundedBox args={[0.016, 0.1, 0.04]} radius={0.007} smoothness={3} position={[-BODY_W / 2 - 0.004, 0.55, 0]}>
+        <meshStandardMaterial color="#454E70" metalness={0.95} roughness={0.3} envMapIntensity={1.4} />
+      </RoundedBox>
+    </group>
+  );
+}
 
 // ---------- Objets en orbite : enveloppes, dossiers, factures (low-poly) ----------
 function makeItemMesh(kind) {
@@ -62,7 +123,6 @@ function makeItemMesh(kind) {
     front.position.set(0, -0.02, 0.015);
     g.add(back, tab, front);
   } else {
-    // facture : feuille fine avec liseré
     const sheet = new THREE.Mesh(
       new THREE.BoxGeometry(0.34, 0.46, 0.01),
       new THREE.MeshStandardMaterial({ color: "#F2F4FB", roughness: 0.65 })
@@ -81,147 +141,11 @@ function makeItemMesh(kind) {
 }
 
 function Scene({ ctrl, onFacing, onRectReady }) {
-  const { scene } = useGLTF(`${BASE}/phone.glb`);
   const root = useRef();
   const { camera, size } = useThree();
   const items = useRef([]);
-  const screenMeshRef = useRef(null);
-  const phoneRotRef = useRef(0);
   const facingRef = useRef(false);
   const t0 = useRef(0);
-
-  // Téléphone : écran éteint, backface culling partout
-  useMemo(() => {
-    let screenMesh = null;
-    scene.traverse((o) => {
-      if (!o.isMesh || !o.material) return;
-      const mats = Array.isArray(o.material) ? o.material : [o.material];
-      const isScreen = mats[0].color && mats[0].color.r > 0.6 && mats[0].color.g > 0.6 && mats[0].color.b > 0.6;
-      if (isScreen && !screenMesh) screenMesh = o;
-      mats.forEach((m) => {
-        m.side = THREE.FrontSide;
-        if (m.emissive) m.emissive.setScalar(0);
-        if (isScreen) {
-          m.color.setRGB(0.02, 0.03, 0.08);
-          if ("metalness" in m) m.metalness = 0;
-          if ("roughness" in m) m.roughness = 0.55;
-        } else {
-          if ("metalness" in m) m.metalness = 0.75;
-          if ("roughness" in m) m.roughness = 0.28;
-          if ("envMapIntensity" in m) m.envMapIntensity = 1.25;
-        }
-        m.needsUpdate = true;
-      });
-    });
-    screenMeshRef.current = screenMesh;
-
-    // Le glb est posé en diagonale dans son espace local : on le redresse par PCA.
-    // Axe le plus fin = normale de l'écran (→ +Z caméra), axe le plus long = vertical (→ +Y).
-    scene.updateMatrixWorld(true);
-    let big = null;
-    scene.traverse((o) => {
-      if (o.isMesh && (!big || o.geometry.attributes.position.count > big.geometry.attributes.position.count)) big = o;
-    });
-    if (big) {
-      const pos = big.geometry.attributes.position;
-      const step = Math.max(1, Math.floor(pos.count / 4000));
-      const mean = new THREE.Vector3();
-      let n = 0;
-      const v = new THREE.Vector3();
-      for (let i = 0; i < pos.count; i += step) {
-        v.set(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(big.matrixWorld);
-        mean.add(v);
-        n++;
-      }
-      mean.multiplyScalar(1 / n);
-      let xx = 0, xy = 0, xz = 0, yy = 0, yz = 0, zz = 0;
-      for (let i = 0; i < pos.count; i += step) {
-        v.set(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(big.matrixWorld).sub(mean);
-        xx += v.x * v.x; xy += v.x * v.y; xz += v.x * v.z;
-        yy += v.y * v.y; yz += v.y * v.z; zz += v.z * v.z;
-      }
-      const C = [[xx, xy, xz], [xy, yy, yz], [xz, yz, zz]];
-      const mulC = (a) => [
-        C[0][0] * a[0] + C[0][1] * a[1] + C[0][2] * a[2],
-        C[1][0] * a[0] + C[1][1] * a[1] + C[1][2] * a[2],
-        C[2][0] * a[0] + C[2][1] * a[1] + C[2][2] * a[2],
-      ];
-      const norm3 = (a) => {
-        const l = Math.hypot(a[0], a[1], a[2]) || 1;
-        return [a[0] / l, a[1] / l, a[2] / l];
-      };
-      const power = (deflate) => {
-        let a = norm3([Math.random() + 0.1, Math.random() + 0.1, Math.random() + 0.1]);
-        for (let k = 0; k < 60; k++) {
-          let b = mulC(a);
-          deflate.forEach((d) => {
-            const dot = b[0] * d[0] + b[1] * d[1] + b[2] * d[2];
-            b = [b[0] - dot * d[0], b[1] - dot * d[1], b[2] - dot * d[2]];
-          });
-          a = norm3(b);
-        }
-        return a;
-      };
-      const e1 = power([]); // plus grande variance = axe long (hauteur)
-      const e2 = power([e1]); // moyenne = largeur
-      const yAxis = new THREE.Vector3(...e1);
-      const xAxis = new THREE.Vector3(...e2);
-      const zAxis = new THREE.Vector3().crossVectors(xAxis, yAxis).normalize(); // plus fin = normale écran
-      xAxis.crossVectors(yAxis, zAxis).normalize();
-      // base (x,y,z) du téléphone → base monde : rotation = transposée
-      const m = new THREE.Matrix4().makeBasis(xAxis, yAxis, zAxis).transpose();
-      const qTotal = new THREE.Quaternion().setFromRotationMatrix(m);
-
-      // Raffinement : la PCA est biaisée par les coins arrondis et la bosse caméra.
-      // yaw/pitch → épaisseur Z minimale (pile de face) ; roll → largeur X minimale (vertical).
-      const pts = [];
-      for (let i = 0; i < pos.count; i += step) {
-        const p = new THREE.Vector3(pos.getX(i), pos.getY(i), pos.getZ(i)).applyMatrix4(big.matrixWorld);
-        p.applyQuaternion(qTotal);
-        pts.push(p);
-      }
-      const extent = (axisIdx) => {
-        let lo = Infinity, hi = -Infinity;
-        for (const p of pts) {
-          const val = axisIdx === 0 ? p.x : axisIdx === 1 ? p.y : p.z;
-          if (val < lo) lo = val;
-          if (val > hi) hi = val;
-        }
-        return hi - lo;
-      };
-      const refine = (axisVec, critAxis) => {
-        let best = 0, bestV = Infinity;
-        const qt = new THREE.Quaternion();
-        for (let a = -0.35; a <= 0.35; a += 0.01) {
-          qt.setFromAxisAngle(axisVec, a);
-          let lo = Infinity, hi = -Infinity;
-          for (const p of pts) {
-            const r = p.clone().applyQuaternion(qt);
-            const val = critAxis === 0 ? r.x : r.z;
-            if (val < lo) lo = val;
-            if (val > hi) hi = val;
-          }
-          if (hi - lo < bestV) { bestV = hi - lo; best = a; }
-        }
-        qt.setFromAxisAngle(axisVec, best);
-        pts.forEach((p) => p.applyQuaternion(qt));
-        qTotal.premultiply(qt);
-      };
-      refine(new THREE.Vector3(0, 1, 0), 2); // yaw : épaisseur Z min
-      refine(new THREE.Vector3(1, 0, 0), 2); // pitch : épaisseur Z min
-      refine(new THREE.Vector3(0, 0, 1), 0); // roll : largeur X min
-
-      // rotation calculée en espace monde → composer (idempotent au double-mount de dev)
-      scene.quaternion.premultiply(qTotal);
-      // recentrage
-      scene.position.set(0, 0, 0);
-      scene.updateMatrixWorld(true);
-      const box = new THREE.Box3().setFromObject(scene);
-      const c = new THREE.Vector3();
-      box.getCenter(c);
-      scene.position.sub(c);
-    }
-  }, [scene]);
 
   // Objets en orbite
   const defs = useMemo(() => {
@@ -233,7 +157,7 @@ function Scene({ ctrl, onFacing, onRectReady }) {
       y: -0.25 + (((i * 37) % 100) / 100) * 0.9,
       speed: 0.12 + ((i * 13) % 10) / 100,
       spin: 0.3 + ((i * 7) % 10) / 20,
-      t: 0, // progression d'aspiration
+      t: 0,
     }));
   }, []);
 
@@ -245,28 +169,20 @@ function Scene({ ctrl, onFacing, onRectReady }) {
     return () => defs.forEach((d) => r.remove(d.mesh));
   }, [defs]);
 
-  // Rect écran en pixels (pose de face, caméra fixe) → overlay UI HTML.
-  // Face avant de la bbox du téléphone aligné, avec marge pour la bordure.
+  // Rect écran en pixels : dimensions connues (téléphone procédural), caméra fixe
   useEffect(() => {
-    const r = root.current;
-    if (!r) return;
-    const prev = r.rotation.y;
-    r.rotation.y = 0;
-    r.updateMatrixWorld(true);
-    const b = new THREE.Box3().setFromObject(scene); // le téléphone seul, pas les objets en orbite
-    r.rotation.y = prev;
-    const w = b.max.x - b.min.x;
-    const h = b.max.y - b.min.y;
-    const inX = w * 0.075; // bordure / bezel
-    const inY = h * 0.045;
-    const toPx = (x, y, z) => {
-      const p = new THREE.Vector3(x, y, z).project(camera);
+    const s = GROUP_SCALE;
+    const zFront = (BODY_D / 2 + 0.014) * s;
+    const inX = SCREEN_W * 0.045 * s;
+    const inY = SCREEN_H * 0.03 * s;
+    const toPx = (x, y) => {
+      const p = new THREE.Vector3(x, y, zFront).project(camera);
       return { x: (p.x * 0.5 + 0.5) * size.width, y: (-p.y * 0.5 + 0.5) * size.height };
     };
-    const a = toPx(b.min.x + inX, b.max.y - inY, b.max.z);
-    const c = toPx(b.max.x - inX, b.min.y + inY, b.max.z);
+    const a = toPx((-SCREEN_W / 2) * s + inX, (SCREEN_H / 2) * s + GROUP_Y - inY);
+    const c = toPx((SCREEN_W / 2) * s - inX, (-SCREEN_H / 2) * s + GROUP_Y + inY);
     onRectReady({ left: a.x, top: a.y, width: c.x - a.x, height: c.y - a.y });
-  }, [camera, size, onRectReady, scene]);
+  }, [camera, size, onRectReady]);
 
   useFrame((_, dt) => {
     const s = ctrl.current;
@@ -287,7 +203,7 @@ function Scene({ ctrl, onFacing, onRectReady }) {
     const targetCount = Math.min(N_OBJ, Math.floor(s.turn / ABSORB_STEP));
     items.current.forEach((d, i) => {
       if (i < targetCount && d.t < 1) d.t = Math.min(1, d.t + dt * 1.4);
-      const e = d.t < 0.5 ? 2 * d.t * d.t : 1 - Math.pow(-2 * d.t + 2, 2) / 2; // easeInOut
+      const e = d.t < 0.5 ? 2 * d.t * d.t : 1 - Math.pow(-2 * d.t + 2, 2) / 2;
       const th = d.theta + t0.current * d.speed + e * 5;
       const rad = d.radius * (1 - e);
       const y = d.y * (1 - e) + 0.02 * Math.sin(t0.current * 1.3 + i) * (1 - e);
@@ -315,7 +231,7 @@ function Scene({ ctrl, onFacing, onRectReady }) {
   return (
     <group position={[0, GROUP_Y, 0]} scale={GROUP_SCALE}>
       <group ref={root}>
-        <primitive object={scene} />
+        <Phone />
       </group>
     </group>
   );
@@ -327,7 +243,7 @@ export default function Hero3DScene({ ctrl, onFacing, onRectReady }) {
       <Env />
       <ambientLight intensity={0.35} />
       {/* key light */}
-      <directionalLight position={[3, 5, 5]} intensity={2.6} />
+      <directionalLight position={[3, 5, 5]} intensity={1.9} />
       {/* rim light froide, par l'arrière, pour détacher les tranches */}
       <directionalLight position={[-3, 2, -4]} intensity={2.4} color="#9FC2FF" />
       <pointLight position={[-5, -1, 2]} intensity={50} color="#7B5CFF" />
@@ -337,5 +253,3 @@ export default function Hero3DScene({ ctrl, onFacing, onRectReady }) {
     </Canvas>
   );
 }
-
-useGLTF.preload(`${BASE}/phone.glb`);
