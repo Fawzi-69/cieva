@@ -1,52 +1,76 @@
 /* ------------------------------------------------------------------
-   CONTENU À REMPLACER (placeholders marqués TODO)
-   - INTRO.since   : année de création de l'agence (ton ancienneté)
-   - INTRO stats   : années d'expérience, expertises clés
-   - MEMBERS       : fondateurs / équipe (nom, rôle, parcours court, LinkedIn, photo)
+   Données réelles — source : donnees_site_vitrine_ritech_final.docx
+   TODO restants : photos réelles à la place des initiales,
+   liens LinkedIn des membres (seul le GitHub du fondateur est fourni).
    ------------------------------------------------------------------ */
 
-// TODO: adapter à ton ancienneté réelle
 const INTRO = {
-  since: "2021", // TODO: année de création
+  since: "2018",
   stats: [
-    { value: "5 ans", label: "à construire des outils métier" },
-    { value: "3 secteurs", label: "transport, BTP, services" },
-    { value: "IA + métier", label: "double expertise" },
+    { value: "10 ans", label: "d'expérience IT & cloud de haut niveau" },
+    { value: "+5 000", label: "interventions terrain réalisées (FDJ, Auchan…)" },
+    { value: "AWS · GCP", label: "certifiés Solutions Architect & AI Practitioner" },
   ],
 };
 
-// TODO: remplacer par les vrais membres (photo, parcours, LinkedIn)
-const MEMBERS = [
+const TIMELINE = [
   {
-    name: "Prénom Nom",                 // TODO
-    role: "Cofondateur · Produit & IA", // TODO
-    bio: "Ex-[entreprise]. Conçoit et fait tourner les modèles derrière Sielo, Vela et Lyra.", // TODO
-    initial: "A",                       // TODO: initiales ou photo
-    accent: "linear-gradient(135deg,#7B5CFF,#4FA8FF)",
-    linkedin: "#",                      // TODO: URL LinkedIn
+    period: "2015 – 2018", color: "#8F97BA",
+    text: "Fondations de l'activité IT : plus de 5 000 interventions réseau et matériel à haute intensité pour la FDJ et Auchan.",
   },
   {
-    name: "Prénom Nom",                 // TODO
-    role: "Cofondateur · Métier & Clients", // TODO
-    bio: "15 ans en exploitation transport. Traduit le terrain en règles que l'outil applique.", // TODO
-    initial: "B",                       // TODO
-    accent: "linear-gradient(135deg,#7C5CFF,#C05CFF)",
-    linkedin: "#",                      // TODO
+    period: "2018 – 2023", color: "#4FA8FF",
+    text: "Structuration officielle (Kbis) et migrations cloud grands comptes : déploiement national de 30 magasins Primark (30 techniciens coordonnés), transitions Office 365 pour Orange.",
   },
   {
-    name: "Prénom Nom",                 // TODO
-    role: "Lead Développement",         // TODO
-    bio: "Assemble et déploie chaque application sur mesure, de la base éprouvée à la prod.", // TODO
-    initial: "C",                       // TODO
-    accent: "linear-gradient(135deg,#3DDC97,#4FA8FF)",
-    linkedin: "#",                      // TODO
+    period: "2023 – 2026", color: "#7C5CFF",
+    text: "Ingénierie Cloud & DevOps avancée chez Maintronic : infrastructures Terraform (IaC), Landing Zones sécurisées, pipelines AWS Step Functions, Lambda, Bedrock, SageMaker.",
+  },
+  {
+    period: "Aujourd'hui", color: "#3DDC97",
+    text: "Solutions d'automatisation métier et d'IA générative sur mesure pour plus de 50 clients sur toute la zone francophone — France, Suisse, Belgique, Canada.",
   },
 ];
 
-function LinkedInIcon() {
+const MEMBERS = [
+  {
+    name: "Fawzi Baliouz",
+    role: "Fondateur · Architecte Cloud & DevOps",
+    bio: "10 ans d'infrastructures complexes et de déploiements nationaux (Auchan, Primark, Orange, Maintronic). Certifié AWS Solutions Architect & AI Practitioner, il conçoit les architectures cloud hautement disponibles derrière chaque SaaS livré.",
+    initial: "FB",
+    accent: "linear-gradient(135deg,#7B5CFF,#4FA8FF)",
+    link: { href: "https://github.com/Fawzi-69", label: "GitHub", type: "github" },
+  },
+  {
+    name: "Najoua Popal",
+    role: "Directrice Commerciale · Head of Product Marketing",
+    bio: "8 ans de vente stratégique et de marketing digital. Elle traduit les problématiques opérationnelles des clients en solutions ROIstes, avec des modèles financiers qui rendent le sur-mesure immédiatement rentable.",
+    initial: "NP",
+    accent: "linear-gradient(135deg,#C05CFF,#7C5CFF)",
+    link: null, // TODO: LinkedIn
+  },
+  {
+    name: "Alexandre Vaneck",
+    role: "Tech Lead · Ingénieur Senior IA",
+    bio: "Spécialiste des architectures LLM, du DevSecOps et des pipelines de données complexes (Terraform, Python, PySpark). Il conçoit le moteur algorithmique hautement sécurisé de nos applications.",
+    initial: "AV",
+    accent: "linear-gradient(135deg,#4FA8FF,#3DDC97)",
+    link: null, // TODO: LinkedIn
+  },
+  {
+    name: "Lucas Morel",
+    role: "Développeur Fullstack · Intégrateur IA Générative",
+    bio: "Expert de l'interconnexion rapide des briques d'IA et des frameworks cloud modernes. Il assure le prototypage ultra-rapide des MVP pour garantir une mise en production sous 2 semaines.",
+    initial: "LM",
+    accent: "linear-gradient(135deg,#3DDC97,#4FA8FF)",
+    link: null, // TODO: LinkedIn
+  },
+];
+
+function GitHubIcon() {
   return (
     <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M4.98 3.5a2.5 2.5 0 11-.02 5 2.5 2.5 0 01.02-5zM3 9h4v12H3zM9 9h3.8v1.7h.05c.53-1 1.83-2.05 3.77-2.05 4.03 0 4.78 2.65 4.78 6.1V21h-4v-5.4c0-1.29-.02-2.95-1.8-2.95-1.8 0-2.08 1.4-2.08 2.85V21H9z" />
+      <path d="M12 2a10 10 0 00-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.9-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.58 9.58 0 015 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85V21c0 .27.18.58.69.48A10 10 0 0012 2z" />
     </svg>
   );
 }
@@ -58,7 +82,7 @@ function Avatar({ initial, accent }) {
       style={{
         width: 64, height: 64, borderRadius: "50%", flexShrink: 0,
         background: accent, display: "flex", alignItems: "center", justifyContent: "center",
-        font: "600 24px 'Space Grotesk',sans-serif", color: "#fff", marginBottom: 16,
+        font: "600 22px 'Space Grotesk',sans-serif", color: "#fff", marginBottom: 16,
       }}
     >
       {initial}
@@ -80,7 +104,7 @@ export default function Team() {
           </p>
         </div>
 
-        {/* ---------- Bandeau ancienneté / expertise ---------- */}
+        {/* ---------- Bandeau expertise ---------- */}
         <div
           data-reveal="" className="grid-3"
           style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, marginBottom: 26 }}
@@ -95,16 +119,48 @@ export default function Team() {
               }}
             >
               <div className="grad" style={{ font: "700 clamp(24px,3vw,32px)/1 'Space Grotesk',sans-serif", letterSpacing: "-.02em" }}>{s.value}</div>
-              <div style={{ marginTop: 8, font: "400 13.5px 'Hanken Grotesk',sans-serif", color: "#9AA2C4" }}>{s.label}</div>
+              <div style={{ marginTop: 8, font: "400 13.5px/1.5 'Hanken Grotesk',sans-serif", color: "#9AA2C4" }}>{s.label}</div>
             </div>
           ))}
         </div>
 
+        {/* ---------- Frise historique ---------- */}
+        <div
+          data-reveal=""
+          style={{
+            padding: "32px 34px", borderRadius: 18, marginBottom: 26,
+            background: "rgba(255,255,255,.02)", border: "1px solid rgba(255,255,255,.08)",
+          }}
+        >
+          <div style={{ font: "600 12px 'Space Grotesk',sans-serif", letterSpacing: ".14em", textTransform: "uppercase", color: "#6B7396", marginBottom: 22 }}>
+            10 ans de terrain, en quatre étapes
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+            {TIMELINE.map((t, i) => (
+              <div key={t.period} style={{ display: "flex", gap: 18 }}>
+                {/* Colonne dot + ligne */}
+                <div style={{ display: "flex", flexDirection: "column", alignItems: "center", width: 12 }}>
+                  <span style={{ width: 11, height: 11, borderRadius: "50%", background: t.color, boxShadow: `0 0 10px ${t.color}`, flexShrink: 0, marginTop: 4 }} />
+                  {i < TIMELINE.length - 1 && (
+                    <span style={{ width: 1, flex: 1, background: "linear-gradient(180deg,rgba(139,124,255,.4),rgba(139,124,255,.08))" }} />
+                  )}
+                </div>
+                <div style={{ paddingBottom: i < TIMELINE.length - 1 ? 22 : 0 }}>
+                  <div style={{ font: "600 13px 'Space Grotesk',sans-serif", letterSpacing: ".08em", textTransform: "uppercase", color: t.color, marginBottom: 5 }}>
+                    {t.period}
+                  </div>
+                  <p style={{ margin: 0, font: "400 14px/1.65 'Hanken Grotesk',sans-serif", color: "#8F97BA", maxWidth: 720 }}>{t.text}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* ---------- Membres ---------- */}
-        <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
+        <div className="split" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 18 }}>
           {MEMBERS.map((m) => (
             <div
-              key={m.name + m.role}
+              key={m.name}
               data-reveal=""
               style={{
                 padding: 28, borderRadius: 18, display: "flex", flexDirection: "column",
@@ -114,9 +170,11 @@ export default function Team() {
               <Avatar initial={m.initial} accent={m.accent} />
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 4 }}>
                 <h3 style={{ margin: 0, font: "600 18px 'Space Grotesk',sans-serif", color: "#F2F4FF" }}>{m.name}</h3>
-                <a href={m.linkedin} aria-label={`LinkedIn de ${m.name}`} className="lnk" style={{ color: "#6B7396", display: "flex" }} target="_blank" rel="noopener noreferrer">
-                  <LinkedInIcon />
-                </a>
+                {m.link && (
+                  <a href={m.link.href} aria-label={`${m.link.label} de ${m.name}`} className="lnk" style={{ color: "#6B7396", display: "flex" }} target="_blank" rel="noopener noreferrer">
+                    <GitHubIcon />
+                  </a>
+                )}
               </div>
               <div style={{ font: "600 13px 'Space Grotesk',sans-serif", color: "#8B7BFF", marginBottom: 12 }}>{m.role}</div>
               <p style={{ margin: 0, font: "400 14px/1.6 'Hanken Grotesk',sans-serif", color: "#8F97BA" }}>{m.bio}</p>

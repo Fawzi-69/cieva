@@ -1,15 +1,15 @@
 /* ------------------------------------------------------------------
-   CONTENU À REMPLACER (placeholders marqués TODO)
-   - Téléphone, email, ville/zone, horaires, temps de réponse
+   Données réelles — source : donnees_site_vitrine_ritech_final.docx
+   Recommandation : créer une adresse sur domaine (ex. contact@cieva.fr)
+   redirigée vers Gmail — plus crédible qu'une adresse @gmail.com.
    ------------------------------------------------------------------ */
 
-// TODO: remplacer par les vraies coordonnées
 const CONTACT = {
-  email: "hello@cieva.fr",          // TODO
-  phone: "+33 X XX XX XX XX",        // TODO
-  city: "France · à distance ou sur site", // TODO: ville / zone d'intervention
-  hours: "Lun–Ven · 9h–18h",         // TODO
-  responseTime: "Réponse sous 24 h", // TODO
+  email: "fawzi.baliouz@gmail.com", // TODO: passer sur une adresse @cieva.fr
+  phone: "06 23 92 83 74",
+  city: "100% remote · France, Suisse, Belgique, Canada",
+  hours: "Lun–Ven · 8h–19h",
+  responseTime: "Devis sous 24–48 h",
 };
 
 function Row({ icon, label, value, href }) {
@@ -50,7 +50,7 @@ export default function Contact() {
               icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" strokeWidth="1.6" /><path d="M4 7l8 6 8-6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" /></svg>}
             />
             <Row
-              label="Téléphone" value={CONTACT.phone} href={`tel:${CONTACT.phone.replace(/\s/g, "")}`}
+              label="Téléphone" value={CONTACT.phone} href="tel:+33623928374"
               icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M5 4h3l2 5-2.5 1.5a11 11 0 005 5L14 13l5 2v3a2 2 0 01-2 2A15 15 0 013 6a2 2 0 012-2z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /></svg>}
             />
             <Row
@@ -60,6 +60,10 @@ export default function Contact() {
             <Row
               label="Horaires" value={`${CONTACT.hours} · ${CONTACT.responseTime}`}
               icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.6" /><path d="M12 7v5l3 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+            />
+            <Row
+              label="Support" value="Assistance critique 24/7 incluse les 6 premiers mois"
+              icon={<svg width="18" height="18" viewBox="0 0 24 24" fill="none"><path d="M12 3l7 3v5c0 4.4-3 7.6-7 9-4-1.4-7-4.6-7-9V6l7-3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" /><path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>}
             />
           </div>
 

@@ -36,16 +36,15 @@ export default function Footer() {
         <div>
           <div style={headStyle}>Contact</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {/* TODO: vraies coordonnées */}
-            <a href="mailto:hello@cieva.fr" className="lnk" style={linkStyle}>hello@cieva.fr</a>
-            <a href="tel:+33000000000" className="lnk" style={linkStyle}>+33 X XX XX XX XX</a>
+            {/* TODO: passer sur une adresse @cieva.fr */}
+            <a href="mailto:fawzi.baliouz@gmail.com" className="lnk" style={linkStyle}>fawzi.baliouz@gmail.com</a>
+            <a href="tel:+33623928374" className="lnk" style={linkStyle}>06 23 92 83 74</a>
             <a href="#contact" className="lnk" style={linkStyle}>Réserver une démo</a>
           </div>
         </div>
       </div>
-      {/* TODO: compléter les mentions légales (obligatoire en France) : raison sociale, forme juridique, SIRET, hébergeur */}
       <div style={{ maxWidth: 1080, margin: "32px auto 0", padding: "0 32px", font: "400 12px/1.6 'Hanken Grotesk',sans-serif", color: "#5A6284" }}>
-        Cieva — SAS au capital de X € · SIRET 000 000 000 00000 · TVA FR00000000000 · Siège : Ville, France · Hébergé en France 🇫🇷
+        Cieva — une marque de RITECH Services Informatiques · 813 634 979 R.C.S. Lyon · Agence française 100% digitale — France, Suisse, Belgique, Canada · Hébergement : infrastructure cloud managée (AWS / Firebase)
       </div>
       <div style={{ maxWidth: 1080, margin: "16px auto 0", padding: "18px 32px 0", borderTop: "1px solid rgba(255,255,255,.06)", display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", font: "400 12.5px 'Hanken Grotesk',sans-serif", color: "#6B7396" }}>
         <span>© 2026 Cieva — Applications métier sur-mesure.</span>

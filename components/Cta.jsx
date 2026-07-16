@@ -17,7 +17,7 @@ export default function Cta() {
             Une démo concrète, sur votre métier. Repartez avec une idée claire du ROI — sans engagement.
           </p>
           <a
-            href="mailto:hello@cieva.fr" className="btn-glow"
+            href="mailto:fawzi.baliouz@gmail.com" className="btn-glow"
             style={{ display: "inline-block", padding: "14px 28px", borderRadius: 11, background: "#0D0F1E", color: "#fff", font: "600 15px 'Space Grotesk',sans-serif", boxShadow: "0 10px 30px rgba(0,0,0,.35)" }}
           >
             Réserver une démo (15 min)

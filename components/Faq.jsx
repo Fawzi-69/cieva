@@ -17,7 +17,7 @@ const FAQS = [
   },
   {
     q: "Comment mesurer le ROI ?",
-    a: "Lors de la démo, on chiffre ensemble : heures d'exploitation économisées, ressaisies supprimées, appels manqués récupérés. Un de nos clients transporteurs est passé de 17 à 30 camions sans embaucher d'exploitant.",
+    a: "Lors de la démo, on chiffre ensemble : heures d'exploitation économisées, ressaisies supprimées, appels manqués récupérés. Nos clients constatent jusqu'à 70% de temps opérationnel gagné — un cabinet comptable économise 80 heures par mois et par agent.",
   },
 ];
 

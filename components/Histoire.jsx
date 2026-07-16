@@ -3,7 +3,7 @@ const BEATS = [
     era: "Hier",
     color: "#8F97BA",
     title: "Le sur-mesure coûtait une fortune",
-    body: "Un logiciel à votre image, c'était six mois de développement et un budget à six chiffres. Alors les PME prenaient un outil générique — et s'adaptaient à lui, pas l'inverse.",
+    body: "Un logiciel métier à votre image, c'était des mois de développement et 15 000 à 30 000 € au bas mot. Alors les PME prenaient un outil générique — et s'adaptaient à lui, pas l'inverse.",
   },
   {
     era: "Aujourd'hui",

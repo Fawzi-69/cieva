@@ -66,6 +66,7 @@ section[id]{scroll-margin-top:80px}
   .wrap{padding:0 22px}
   .nav-links,.nav-secondary{display:none}
   .grid-3{grid-template-columns:1fr !important}
+  .grid-4{grid-template-columns:1fr 1fr !important}
   .next-card{grid-template-columns:1fr !important}
   .next-card img{max-height:240px}
   .split{grid-template-columns:1fr !important;gap:32px !important}
