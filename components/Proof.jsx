@@ -16,7 +16,7 @@ const LOGOS = ["Auchan", "Primark", "Orange", "La FDJ", "Maintronic", "Sielo", "
 
 const FEATURED = {
   quote:
-    "L'intégration de la plateforme Sielo a totalement révolutionné notre chaîne logistique. Avant, la gestion manuelle des camions et des plannings était une friction administrative quotidienne. Grâce à leur solution automatisée intelligente, nous avons gagné 70 % de temps opérationnel. Obtenir un tel niveau de sur-mesure sans passer par les budgets pharaoniques des éditeurs traditionnels a été le déclencheur de notre croissance.",
+    "L'intégration de la plateforme Sielo a totalement révolutionné notre chaîne logistique. Avant, la gestion manuelle des camions et des plannings était une friction administrative quotidienne. Grâce à leur solution automatisée intelligente, nous avons gagné 70 % de temps opérationnel. Obtenir un tel niveau de sur-mesure sans passer par les budgets pharaoniques des éditeurs traditionnels à 15k€ a été le déclencheur de notre croissance.",
   value: "+70%", unit: "de temps opérationnel", note: "gagné sur la chaîne logistique",
   name: "Mehdy K.",
   role: "Directeur des Opérations Logistiques · Sielo",
@@ -26,19 +26,19 @@ const FEATURED = {
 const TESTIMONIALS = [
   {
     quote:
-      "L'équipe a développé Vela, une solution sur mesure qui automatise la centralisation et anticipe nos flux de cash-flow. Nous avançons 10x plus vite sur nos décisions d'investissement, sans recruter un contrôleur de gestion dédié.",
+      "En tant qu'entrepreneur, piloter des structures multiples avec des flux financiers hyper diversifiés était un goulet d'étranglement administratif majeur. L'équipe a développé Vela, une solution sur mesure intelligente qui automatise la centralisation et anticipe nos flux de cash-flow. L'outil nous permet d'avancer 10x plus vite sur nos décisions d'investissement sans avoir besoin de recruter un contrôleur de gestion dédié.",
     name: "Alexandre Gautier", role: "Fondateur & Multi-Entrepreneur · Vela Trésorerie",
-    initial: "AG", accent: "#7C5CFF", impact: "Croissance ×10 à effectif constant",
+    initial: "AG", accent: "#7C5CFF", impact: "Croissance X10 à effectif constant",
   },
   {
     quote:
-      "Là où les SSII traditionnelles nous demandaient plus de 15 000 € et des mois de développement, cette agence a déployé un outil IA sur mesure en deux semaines. Nous traitons les dossiers 10x plus vite sans aucune embauche.",
+      "Les tâches de saisie et de réconciliation manuelle des pièces comptables minaient la rentabilité de notre cabinet. Là où les SSII traditionnelles nous demandaient plus de 15 000 € et des mois de développement, cette agence a déployé un outil IA sur mesure en deux semaines. Nous traitons les dossiers 10x plus vite sans aucune embauche.",
     name: "Sophie Laurent", role: "Associée Principale · Audit & Conseil Grand Est",
-    initial: "SL", accent: "#4FA8FF", impact: "80 h gagnées / mois / agent",
+    initial: "SL", accent: "#4FA8FF", impact: "80 heures gagnées/mois/agent",
   },
   {
     quote:
-      "Planifier manuellement les flux de camions régionaux était une source d'erreurs constante. Le SaaS sur mesure, à un tarif incroyablement accessible, a automatisé le routage. Nous optimisons nos marges en temps réel.",
+      "Planifier manuellement les flux de camions régionaux était une source d'erreurs constante et chronophage. Le SaaS sur mesure développé à un tarif incroyablement accessible a automatisé le routage. Nous optimisons nos marges en temps réel.",
     name: "Marc-Antoine Perrin", role: "Directeur Logistique · BTP Horizon (Suisse)",
     initial: "MP", accent: "#3DDC97", impact: "−25% de coûts de transport",
   },
@@ -46,53 +46,53 @@ const TESTIMONIALS = [
     quote:
       "Le tri et la qualification des CV prenaient des journées entières à nos recruteurs. L'agent IA développé sur mesure élimine cette friction répétitive. Notre vitesse de placement a été multipliée par 5.",
     name: "Amélie Dupont", role: "Directrice RH · InnovaTech Solutions",
-    initial: "AD", accent: "#C05CFF", impact: "Temps de traitement ÷ 5",
+    initial: "AD", accent: "#C05CFF", impact: "Temps de traitement divisé par 5",
   },
   {
     quote:
-      "Notre support client était submergé par les tâches répétitives de niveau 1. L'IA générative traite désormais 60 % des flux de manière fluide et autonome, sans surcharger la masse salariale.",
+      "Notre support client était submergé par les tâches répétitives de niveau 1. L'intégration de briques d'IA générative traite désormais 60% des flux de manière fluide et autonome. Une efficacité démultipliée sans surcharger la masse salariale.",
     name: "Julien Masson", role: "Responsable Customer Success · e-Commerce Scale",
-    initial: "JM", accent: "#4FA8FF", impact: "60% de requêtes automatisées",
+    initial: "JM", accent: "#4FA8FF", impact: "60% de requêtes automatisées en self-service",
   },
   {
     quote:
-      "L'analyse de conformité des baux et contrats commerciaux représentait une charge lourde. Le SaaS personnalisé extrait et valide les clauses critiques en quelques minutes. Le sur-mesure est enfin rentable pour les PME.",
+      "L'analyse de conformité des baux et contrats commerciaux représentait une charge administrative lourde. Le SaaS personnalisé extrait et valide les clauses critiques en quelques minutes. Le sur-mesure est enfin devenu rentable pour les PME.",
     name: "Me Nathalie Roussel", role: "Avocate Associée · Juristes Associés (Belgique)",
-    initial: "NR", accent: "#7C5CFF", impact: "Analyse de contrat en 3 min",
+    initial: "NR", accent: "#7C5CFF", impact: "Analyse de contrat en 3 minutes",
   },
   {
     quote:
-      "La conformité douanière impose une paperasse d'une complexité extrême. L'automatisation intelligente conçue par RITECH a éradiqué les erreurs manuelles. L'assistance 24/7 les 6 premiers mois nous a sécurisés à 100 %.",
+      "La conformité douanière impose une paperasse administrative d'une complexité extrême. L'automatisation intelligente conçue par RITECH a éradiqué les erreurs manuelles. L'assistance 24/7 durant les 6 premiers mois nous a sécurisés à 100%.",
     name: "Yvan Tremblay", role: "Directeur Supply Chain · Global Trade (Canada)",
     initial: "YT", accent: "#3DDC97", impact: "Zéro erreur de conformité",
   },
   {
     quote:
-      "Traiter manuellement les litiges et anomalies de facturation sur des milliers de commandes quotidiennes bloquait notre croissance. Le processus est automatisé sur mesure : nous scalons sereinement sans embaucher.",
-    name: "Frédéric Lambert", role: "DAF · NRJ Solutions",
-    initial: "FL", accent: "#C05CFF", impact: "Dizaines de milliers d'€ récupérés",
+      "Traiter manuellement les litiges et les anomalies de facturation sur des milliers de commandes quotidiennes bloquait notre croissance. Grâce à l'IA, le processus est automatisé sur mesure. Nous scalons sereinement sans embaucher.",
+    name: "Frédéric Lambert", role: "Directeur Administratif et Financier · NRJ Solutions",
+    initial: "FL", accent: "#C05CFF", impact: "Des dizaines de milliers d'euros récupérés",
   },
   {
     quote:
-      "La production répétitive de rapports de performance saturait nos équipes. L'outil sur mesure génère des synthèses analytiques parfaites en un clic. Notre agence se développe bien plus vite.",
+      "La production et le formatage répétitif de rapports de performance pour nos clients saturaient nos équipes. L'outil sur mesure génère des synthèses analytiques parfaites en un clic. Notre agence se développe 10x plus vite.",
     name: "Laura Martinez", role: "Head of Content · Agence VibeMarketing",
-    initial: "LM", accent: "#4FA8FF", impact: "Productivité éditoriale doublée",
+    initial: "LM", accent: "#4FA8FF", impact: "Productivité éditoriale et analytique doublée",
   },
   {
     quote:
-      "Le standard sautait entre midi et deux et pendant les consultations. Lyra décroche, comprend les demandes de rendez-vous complexes et les cale directement dans notre agenda. Elle filtre les urgences et nous laisse des messages clairs.",
+      "Le standard sautait tout le temps entre midi et deux et pendant les consultations. On a mis Lyra en place : elle décroche, comprend les demandes de rendez-vous complexes, et les cale directement dans notre agenda en arrière-plan. Elle filtre les urgences et nous laisse les messages clairs. Ça nous évite de recruter une secrétaire de plus juste pour gérer les coups de fil répétitifs.",
     name: "Clara Bennet", role: "Gestionnaire de Centre · Clinique Privée",
     initial: "CB", accent: "#3DDC97", impact: "Standard décroché 24/7",
   },
   {
     quote:
-      "Sur le chantier, impossible de répondre au téléphone — je perdais un devis sur deux. Maintenant, Lyra répond à ma place avec ma voix, prend les demandes de devis et me liste tout par écrit le soir. Je ne rate plus aucun client.",
+      "Quand tu es sur le chantier les mains dans le plâtre ou sur une échelle, c'est impossible de répondre au téléphone. Du coup, je perdais un devis sur deux parce que les gens n'aiment pas laisser de message sur un répondeur classique. Maintenant, Lyra répond à ma place avec ma voix, prend les demandes de devis et me liste tout par écrit le soir. C'est du sur-mesure de dingue, ça me coûte trois fois rien par rapport à un secrétariat à distance et je ne rate plus aucun client.",
     name: "Stéphane Morel", role: "Artisan Plaquiste · Morel Rénovation",
     initial: "SM", accent: "#3DDC97", impact: "Plus aucun devis perdu",
   },
   {
     quote:
-      "Au volant, impossible de planifier des courses sur l'écran. Lyra gère mes appels clients en direct pendant que je roule : elle vérifie mes dispos, confirme la prise en charge par SMS et met à jour mon trajet. Sans régulateur.",
+      "Au volant, c'est interdit et dangereux de planifier des courses sur l'écran. Lyra gère mes appels clients en direct pendant que je roule. Elle check mes dispos sur le calendrier, confirme la prise en charge au client par SMS et met à jour mon trajet. Je booke des trajets non-stop sans jamais toucher mon téléphone et sans avoir besoin d'engager un régulateur.",
     name: "Karim Mansour", role: "Chauffeur Privé & Fondateur · Prestige Ride",
     initial: "KM", accent: "#3DDC97", impact: "Réservations mains libres, non-stop",
   },
