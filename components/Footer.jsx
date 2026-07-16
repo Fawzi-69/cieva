@@ -21,7 +21,7 @@ export default function Footer() {
           <div style={headStyle}>Produits</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <a href="#produits" className="lnk" style={linkStyle}>Sielo — Transport</a>
-            <a href="#produits" className="lnk" style={linkStyle}>Vela — Interventions</a>
+            <a href="#produits" className="lnk" style={linkStyle}>Vela — Interventions & Trésorerie</a>
             <a href="#produits" className="lnk" style={linkStyle}>Lyra — Assistant vocal</a>
           </div>
         </div>

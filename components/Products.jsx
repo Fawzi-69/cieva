@@ -13,8 +13,8 @@ const PRODUCTS = [
     name: "Vela", color: "#7C5CFF", tone: "#B49BFF",
     bg: "linear-gradient(180deg,rgba(124,92,255,.09),rgba(255,255,255,.02))",
     bc: "rgba(124,92,255,.3)", bch: "rgba(124,92,255,.6)",
-    tag: "Interventions techniques",
-    body: "Planning, tournées, et vos emails transformés en interventions automatiquement. Zéro ressaisie pour vos équipes.",
+    tag: "Interventions & Trésorerie",
+    body: "Vos emails deviennent des interventions planifiées ; vos flux financiers se centralisent et votre cash-flow s'anticipe. Zéro ressaisie.",
     img: "vela.webp", alt: "Application mobile de planning Vela",
   },
   {
