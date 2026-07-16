@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { LogoMark } from "./Logo";
 
 const linkStyle = { font: "400 13.5px 'Hanken Grotesk',sans-serif", color: "#9AA2C4" };
@@ -49,9 +50,8 @@ export default function Footer() {
       <div style={{ maxWidth: 1080, margin: "16px auto 0", padding: "18px 32px 0", borderTop: "1px solid rgba(255,255,255,.06)", display: "flex", justifyContent: "space-between", gap: 16, flexWrap: "wrap", font: "400 12.5px 'Hanken Grotesk',sans-serif", color: "#6B7396" }}>
         <span>© 2026 Cieva — Applications métier sur-mesure.</span>
         <span style={{ display: "flex", gap: 16, flexWrap: "wrap" }}>
-          {/* TODO: pages légales dédiées */}
-          <a href="#" className="lnk">Mentions légales</a>
-          <a href="#" className="lnk">Confidentialité</a>
+          <Link href="/mentions-legales" className="lnk">Mentions légales</Link>
+          <Link href="/confidentialite" className="lnk">Confidentialité</Link>
         </span>
       </div>
     </footer>

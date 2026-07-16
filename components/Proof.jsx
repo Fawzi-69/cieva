@@ -78,6 +78,24 @@ const TESTIMONIALS = [
     name: "Laura Martinez", role: "Head of Content · Agence VibeMarketing",
     initial: "LM", accent: "#4FA8FF", impact: "Productivité éditoriale doublée",
   },
+  {
+    quote:
+      "Le standard sautait entre midi et deux et pendant les consultations. Lyra décroche, comprend les demandes de rendez-vous complexes et les cale directement dans notre agenda. Elle filtre les urgences et nous laisse des messages clairs.",
+    name: "Clara Bennet", role: "Gestionnaire de Centre · Clinique Privée",
+    initial: "CB", accent: "#3DDC97", impact: "Standard décroché 24/7",
+  },
+  {
+    quote:
+      "Sur le chantier, impossible de répondre au téléphone — je perdais un devis sur deux. Maintenant, Lyra répond à ma place avec ma voix, prend les demandes de devis et me liste tout par écrit le soir. Je ne rate plus aucun client.",
+    name: "Stéphane Morel", role: "Artisan Plaquiste · Morel Rénovation",
+    initial: "SM", accent: "#3DDC97", impact: "Plus aucun devis perdu",
+  },
+  {
+    quote:
+      "Au volant, impossible de planifier des courses sur l'écran. Lyra gère mes appels clients en direct pendant que je roule : elle vérifie mes dispos, confirme la prise en charge par SMS et met à jour mon trajet. Sans régulateur.",
+    name: "Karim Mansour", role: "Chauffeur Privé & Fondateur · Prestige Ride",
+    initial: "KM", accent: "#3DDC97", impact: "Réservations mains libres, non-stop",
+  },
 ];
 
 function Stars({ color = "#8B7BFF" }) {
