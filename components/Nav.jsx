@@ -20,6 +20,7 @@ export default function Nav() {
           <a href="#produits" className="lnk" style={{ font: "500 14px 'Hanken Grotesk',sans-serif", color: "#A7AECB" }}>Produits</a>
           <a href="#sur-mesure" className="lnk" style={{ font: "500 14px 'Hanken Grotesk',sans-serif", color: "#A7AECB" }}>Sur-mesure</a>
           <a href="#preuve" className="lnk" style={{ font: "500 14px 'Hanken Grotesk',sans-serif", color: "#A7AECB" }}>Preuve</a>
+          <a href="#equipe" className="lnk" style={{ font: "500 14px 'Hanken Grotesk',sans-serif", color: "#A7AECB" }}>Équipe</a>
           <a href="#demarche" className="lnk" style={{ font: "500 14px 'Hanken Grotesk',sans-serif", color: "#A7AECB" }}>Démarche</a>
         </nav>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
