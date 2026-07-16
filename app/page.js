@@ -9,8 +9,10 @@ import Products from "@/components/Products";
 import Custom from "@/components/Custom";
 import Demarche from "@/components/Demarche";
 import Proof from "@/components/Proof";
+import Team from "@/components/Team";
 import Faq from "@/components/Faq";
 import Cta from "@/components/Cta";
+import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
 
 export default function Home() {
@@ -28,8 +30,10 @@ export default function Home() {
         <Custom />
         <Demarche />
         <Proof />
+        <Team />
         <Faq />
         <Cta />
+        <Contact />
       </main>
       <Footer />
     </div>

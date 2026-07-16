@@ -61,11 +61,22 @@ section[id]{scroll-margin-top:80px}
 .lead{margin:0 auto;max-width:460px;font:400 16px/1.6 'Hanken Grotesk',sans-serif;color:#9AA2C4}
 .grad{background:linear-gradient(120deg,#9B8CFF,#4FD6FF);-webkit-background-clip:text;background-clip:text;color:transparent}
 
+/* ---------- Pages légales ---------- */
+.legal h2{margin:36px 0 10px;font:600 20px/1.3 'Space Grotesk',sans-serif;color:#F2F4FF}
+.legal p,.legal li{font:400 15px/1.7 'Hanken Grotesk',sans-serif;color:#9AA2C4}
+.legal p{margin:0 0 12px}
+.legal ul{margin:0 0 12px;padding-left:22px}
+.legal li{margin-bottom:6px}
+.legal a{color:#8B7BFF}
+.legal a:hover{color:#A79BFF}
+.legal strong{color:#D3D8EE;font-weight:600}
+
 /* ---------- Responsive ---------- */
 @media (max-width:900px){
   .wrap{padding:0 22px}
   .nav-links,.nav-secondary{display:none}
   .grid-3{grid-template-columns:1fr !important}
+  .grid-4{grid-template-columns:1fr 1fr !important}
   .next-card{grid-template-columns:1fr !important}
   .next-card img{max-height:240px}
   .split{grid-template-columns:1fr !important;gap:32px !important}

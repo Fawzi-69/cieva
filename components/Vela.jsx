@@ -14,7 +14,7 @@ export default function Vela() {
           <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 14 }}>
             <span style={{ width: 10, height: 10, borderRadius: "50%", background: "#7C5CFF", boxShadow: "0 0 12px #7C5CFF" }} />
             <span style={{ font: "600 13px 'Space Grotesk',sans-serif", letterSpacing: ".1em", textTransform: "uppercase", color: "#B49BFF" }}>
-              Vela · Interventions techniques
+              Vela · Interventions & Trésorerie
             </span>
           </div>
           <h2 style={{ margin: "0 0 16px", font: "600 clamp(28px,3.2vw,40px)/1.12 'Space Grotesk',sans-serif", letterSpacing: "-.02em", color: "#F2F4FF" }}>
@@ -22,7 +22,8 @@ export default function Vela() {
           </h2>
           <p style={{ margin: "0 0 26px", font: "400 16px/1.65 'Hanken Grotesk',sans-serif", color: "#9AA2C4" }}>
             Une demande client arrive par email : Vela la lit, crée l'intervention, la place dans le
-            planning et prévient le bon technicien. Zéro ressaisie, zéro oubli.
+            planning et prévient le bon technicien. Et côté finances, Vela centralise vos flux et
+            anticipe votre cash-flow. Zéro ressaisie, zéro oubli.
           </p>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
             <a href="#demo" style={{ padding: "12px 20px", borderRadius: 10, background: "linear-gradient(135deg,#7B5CFF,#4FA8FF)", color: "#fff", font: "600 14px 'Space Grotesk',sans-serif", boxShadow: "0 8px 24px rgba(110,92,255,.4)" }}>
