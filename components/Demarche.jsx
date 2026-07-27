@@ -1,57 +1,49 @@
-function Check({ children, color }) {
-  return (
-    <div style={{ display: "flex", gap: 9, font: "400 14px 'Hanken Grotesk',sans-serif", color: color }}>
-      <span style={{ color: "#8B7BFF" }}>✓</span>{children}
-    </div>
-  );
-}
+/* Version compacte (Plan 1 + audit) : explique la promesse « 2 semaines »
+   sur un demi-écran, sans CTA par carte. */
+
+const STEPS = [
+  {
+    n: "1", title: "Base éprouvée", hl: false,
+    body: "On ne développe pas depuis zéro : chaque produit part d'une base déjà utilisée sur le terrain. Fiable dès le premier jour, aucun risque projet.",
+  },
+  {
+    n: "2", title: "Personnalisation", hl: true,
+    body: "Votre marque, vos règles métier intégrées, vos données migrées. En production en ~2 semaines.",
+  },
+  {
+    n: "3", title: "Accompagnement", hl: false,
+    body: "Formation de vos équipes, ajustements continus, assistance critique 24/7 incluse les 6 premiers mois. L'outil grandit avec vous.",
+  },
+];
 
 export default function Demarche() {
   return (
     <section id="demarche" data-screen-label="Démarche" style={{ position: "relative", zIndex: 2, padding: "104px 0 0" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 32px" }}>
-        <div data-reveal="" style={{ textAlign: "center", marginBottom: 42 }}>
-          <h2 className="h2">Comment ça marche</h2>
+        <div data-reveal="" style={{ textAlign: "center", marginBottom: 34 }}>
+          <h2 className="h2">Comment on livre en 2 semaines</h2>
           <p className="lead" style={{ maxWidth: 420 }}>Pas de développement depuis zéro. Pas de mauvaise surprise.</p>
         </div>
-        <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, alignItems: "stretch" }}>
-          {/* Étape 1 */}
-          <div data-reveal="" style={{ padding: 28, borderRadius: 18, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column" }}>
-            <div style={{ font: "600 14px 'Space Grotesk',sans-serif", color: "#A7AECB", marginBottom: 10 }}>Étape 1</div>
-            <div style={{ font: "700 26px 'Space Grotesk',sans-serif", color: "#F2F4FF", marginBottom: 18 }}>Base éprouvée</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 26 }}>
-              <Check color="#AEB5D4">Déjà utilisée sur le terrain</Check>
-              <Check color="#AEB5D4">Fiable dès le premier jour</Check>
-              <Check color="#AEB5D4">Aucun risque projet</Check>
+        <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 16 }}>
+          {STEPS.map((s) => (
+            <div
+              key={s.n} data-reveal=""
+              style={{
+                position: "relative", padding: "22px 22px", borderRadius: 15,
+                background: s.hl ? "linear-gradient(180deg,rgba(123,92,255,.16),rgba(20,22,44,.6))" : "rgba(255,255,255,.03)",
+                border: s.hl ? "1px solid rgba(139,124,255,.55)" : "1px solid rgba(255,255,255,.1)",
+              }}
+            >
+              {s.hl && (
+                <span style={{ position: "absolute", top: -12, left: "50%", transform: "translateX(-50%)", padding: "5px 13px", borderRadius: 999, background: "linear-gradient(135deg,#8B5CFF,#C05CFF)", font: "600 10.5px 'Space Grotesk',sans-serif", letterSpacing: ".08em", textTransform: "uppercase", color: "#fff" }}>
+                  2 semaines
+                </span>
+              )}
+              <div style={{ font: "600 12.5px 'Space Grotesk',sans-serif", color: s.hl ? "#C3BAFF" : "#A7AECB", marginBottom: 7 }}>Étape {s.n}</div>
+              <h3 style={{ margin: "0 0 8px", font: "700 18px 'Space Grotesk',sans-serif", color: "#F2F4FF" }}>{s.title}</h3>
+              <p style={{ margin: 0, font: "400 13.5px/1.6 'Hanken Grotesk',sans-serif", color: "#9AA2C4" }}>{s.body}</p>
             </div>
-            <a href="#demo" className="soft" style={{ marginTop: "auto", textAlign: "center", padding: 12, borderRadius: 10, border: "1px solid rgba(255,255,255,.16)", color: "#E4E7F8", font: "600 14px 'Space Grotesk',sans-serif" }}>Voir la base</a>
-          </div>
-
-          {/* Étape 2 — highlight */}
-          <div data-reveal="" style={{ position: "relative", padding: 28, borderRadius: 18, background: "linear-gradient(180deg,rgba(123,92,255,.16),rgba(20,22,44,.6))", border: "1px solid rgba(139,124,255,.55)", display: "flex", flexDirection: "column", boxShadow: "0 20px 50px rgba(110,92,255,.25)" }}>
-            <div style={{ position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)", padding: "6px 14px", borderRadius: 999, background: "linear-gradient(135deg,#8B5CFF,#C05CFF)", font: "600 11px 'Space Grotesk',sans-serif", letterSpacing: ".08em", textTransform: "uppercase", color: "#fff" }}>2 semaines</div>
-            <div style={{ font: "600 14px 'Space Grotesk',sans-serif", color: "#C3BAFF", marginBottom: 10 }}>Étape 2</div>
-            <div style={{ font: "700 26px 'Space Grotesk',sans-serif", color: "#F2F4FF", marginBottom: 18 }}>Personnalisation</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 26 }}>
-              <Check color="#C6CCE8">Votre marque et vos couleurs</Check>
-              <Check color="#C6CCE8">Vos règles métier intégrées</Check>
-              <Check color="#C6CCE8">Vos données migrées</Check>
-              <Check color="#C6CCE8">En production en ~2 semaines</Check>
-            </div>
-            <a href="#demo" style={{ marginTop: "auto", textAlign: "center", padding: 12, borderRadius: 10, background: "linear-gradient(135deg,#8B5CFF,#C05CFF)", color: "#fff", font: "600 14px 'Space Grotesk',sans-serif", boxShadow: "0 8px 24px rgba(150,92,255,.4)" }}>Réserver une démo</a>
-          </div>
-
-          {/* Étape 3 */}
-          <div data-reveal="" style={{ padding: 28, borderRadius: 18, background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.1)", display: "flex", flexDirection: "column" }}>
-            <div style={{ font: "600 14px 'Space Grotesk',sans-serif", color: "#A7AECB", marginBottom: 10 }}>Étape 3</div>
-            <div style={{ font: "700 26px 'Space Grotesk',sans-serif", color: "#F2F4FF", marginBottom: 18 }}>Accompagnement</div>
-            <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 26 }}>
-              <Check color="#AEB5D4">Formation de vos équipes</Check>
-              <Check color="#AEB5D4">Ajustements continus</Check>
-              <Check color="#AEB5D4">L'outil grandit avec vous</Check>
-            </div>
-            <a href="#demo" className="soft" style={{ marginTop: "auto", textAlign: "center", padding: 12, borderRadius: 10, border: "1px solid rgba(255,255,255,.16)", color: "#E4E7F8", font: "600 14px 'Space Grotesk',sans-serif" }}>En parler</a>
-          </div>
+          ))}
         </div>
       </div>
     </section>

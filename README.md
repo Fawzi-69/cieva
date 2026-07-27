@@ -1,79 +1,67 @@
 # Cieva — Site vitrine
 
-Landing page de **Cieva**, agence d'applications métier sur-mesure pour les PME.
-Narration : « Ce n'est pas un logiciel générique. C'est le vôtre. » Une **constellation de
-produits** — **Sielo** (transport & logistique), **Vela** (interventions techniques),
+Landing page de **Cieva** (marque de **RITECH Services Informatiques**), agence IA :
+applications métier sur-mesure pour les PME. Une constellation de produits —
+**Sielo** (transport & logistique), **Vela** (interventions & trésorerie),
 **Lyra** (assistant vocal) — sur une base éprouvée, personnalisée en deux semaines.
+
+**Production : https://fawzi-69.github.io/cieva/** — déployée automatiquement à
+chaque push sur `main` (`.github/workflows/deploy-pages.yml` → branche `gh-pages`).
 
 ## Stack
 
-- **Next.js 15** (App Router, export statique)
+- **Next.js 15** (App Router, export statique, `BASE_PATH=/cieva` en CI)
 - **Space Grotesk** + **Hanken Grotesk** (Google Fonts)
+- three.js via react-three-fiber (hero 3D uniquement)
 
 ## Démarrer
 
 ```bash
 npm install
 npm run dev      # http://localhost:3000
+npm run build    # export statique dans out/ (BASE_PATH=/cieva pour Pages)
 ```
 
-Build statique (dossier `out/`) :
-
-```bash
-npm run build
-```
-
-Pour un déploiement sous un sous-chemin (ex. GitHub Pages), définir `BASE_PATH` :
-
-```bash
-BASE_PATH=/cieva npm run build
-```
-
-## Structure
+## Structure (Plan 1 « Resserrer »)
 
 ```
 app/
-  layout.js        # fonts, SEO, themeColor, <html lang="fr">
-  page.js          # assemble hero + sections
-  globals.css      # tokens + keyframes (thème Constellation)
+  layout.js            # SEO, OG/Twitter, JSON-LD Organization, fonts
+  page.js              # Hero3D → StatsBand → Products → Histoire → Demarche
+                       #   → Proof (+ AvisRail) → Team → Faq → Cta → Footer
+  not-found.js         # 404 stylée
+  mentions-legales/ · confidentialite/   # pages légales (LegalPage)
 components/
-  Hero3D.jsx       # hero : section, drag, UI écran HTML/CSS, titre + CTA
-  Hero3DScene.jsx  # scène three.js (téléphone procédural + objets métier)
-  Nav · Vela · Workflow · Histoire · Products · Custom · Demarche · Proof · Faq · Cta · Footer
-  Logo · Starfield
+  Hero3D(+Scene)       # hero interactif three.js
+  StatsBand            # chiffres agence + références, sous le hero
+  Histoire             # fusion « pourquoi maintenant » + sur-mesure
+  Demarche             # méthode « 2 semaines » compacte
+  Proof / AvisRail     # témoignage vedette + carrousel d'avis (verbatims exacts)
+  Team                 # frise 10 ans + équipe
+  Faq · Cta · Footer · Nav (burger mobile) · Logo · Starfield · Reveal
+  Vela · Workflow · Custom · Contact   # hors flux — réservés aux pages du Plan 3
 public/
+  og.png · robots.txt · sitemap.xml · products/*.webp
 ```
 
-## Hero 3D interactif
+## ⚠️ Contenus à fournir (TODO marqués dans le code)
 
-Le hero (`Hero3D.jsx` + `Hero3DScene.jsx`, three.js via react-three-fiber) : un téléphone
-au centre, 6 objets métier en orbite, chacun construit en géométrie procédurale et
-rattaché à un produit — camion bleu et colis (Sielo), casque de chantier violet et boîte
-à outils (Vela), casque-micro teal (Lyra), calendrier (planning). Le drag horizontal fait
-tourner l'ensemble (inertie + ressort de retour face caméra) ; la rotation cumulée aspire
-les objets un par un — le tout se boucle en un ou deux swipes. Sans interaction pendant
-6 s, une rotation automatique lente prend le relais pour que le visiteur passif voie
-quand même la séquence. Une fois tout absorbé
-et le téléphone revenu de face, une **UI générique dessinée en HTML/CSS** (sidebar, KPI,
-courbe, listes — aucun texte réel) s'allume sur l'écran, élément par élément. Elle n'est
-jamais visible pendant la rotation. Pas de détournement de scroll : la page défile
-normalement. Le titre et les CTA restent en HTML par-dessus.
-
-Points durs à connaître :
-- Le téléphone est **procédural** (RoundedBox : châssis métal, verre avant/arrière, îlot
-  caméra, boutons) — géométrie fermée par construction. L'ancien `phone.glb` était un mesh
-  ouvert non soudé (rendu creux) et a été abandonné.
-- `side: FrontSide` partout, rendu volumique via **RoomEnvironment** (PMREM procédural,
-  aucun asset externe) + key light et rim light froide.
-- Le verre avant est en `meshPhysicalMaterial` avec `specularIntensity` bas — sinon le
-  lobe spéculaire de la key light blanchit tout l'écran.
-- Le rect écran (pour poser l'UI HTML) est projeté depuis les dimensions connues du
-  téléphone (`SCREEN_W/H`), caméra fixe.
-
-Note CSS : `.page` doit rester en `overflow-x: clip` — un `overflow: hidden` casserait le
-`position: sticky` de la nav.
+| Contenu | Où l'intégrer |
+|---|---|
+| Domaine cieva.fr + CNAME Pages | `app/layout.js` (`SITE_ORIGIN`), `public/robots.txt`, `public/sitemap.xml`, footer |
+| Email pro @cieva.fr | `Cta.jsx`, `Footer.jsx`, pages légales |
+| Adresse du siège social | `app/mentions-legales/page.js` (obligation LCEN) |
+| Logos clients officiels (SVG) | `StatsBand.jsx` (`LOGOS`) |
+| Photos équipe + LinkedIn | `Team.jsx` (`MEMBERS`) |
+| Photos clients cités (avec accord) | `AvisRail.jsx`, `Proof.jsx` |
+| Compte Cal.com / Formspree | `Cta.jsx` (remplacer les `mailto:`) |
+| Captures produits réelles | `Products.jsx` (Plan 2 : études de cas) |
 
 ## Design
 
-Esthétique **« Constellation »** : fond navy étoilé, dégradés bleu (`#009FE3`) → violet
-(`#7C5CFF`), verre sombre, animations au scroll. Détails dans `design-system/MASTER.md`.
+Esthétique **« Constellation »** : fond navy étoilé, dégradés bleu (`#009FE3`) →
+violet (`#7C5CFF`), verre sombre, reveals au scroll, carrousel d'avis en
+défilement continu (pause au survol/focus/bouton). Détails : `design-system/MASTER.md`.
+
+Note CSS : `.page` doit rester en `overflow-x: clip` — un `overflow: hidden`
+casserait le `position: sticky` de la nav.
