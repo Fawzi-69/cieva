@@ -1,0 +1,6 @@
+# TODO: une fois le domaine cieva.fr branché (racine), ces fichiers
+# deviendront pleinement effectifs — les robots lisent robots.txt à la racine.
+User-agent: *
+Allow: /
+
+Sitemap: https://fawzi-69.github.io/cieva/sitemap.xml
