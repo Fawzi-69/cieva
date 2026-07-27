@@ -29,8 +29,10 @@ export default function Footer() {
           <div style={headStyle}>Société</div>
           <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
             <a href="#sur-mesure" className="lnk" style={linkStyle}>Sur-mesure</a>
+            <a href="#demarche" className="lnk" style={linkStyle}>Démarche</a>
             <a href="#preuve" className="lnk" style={linkStyle}>Preuve & ROI</a>
             <a href="#equipe" className="lnk" style={linkStyle}>Équipe</a>
+            <a href="#faq" className="lnk" style={linkStyle}>FAQ</a>
           </div>
         </div>
         <div>

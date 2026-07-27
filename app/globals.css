@@ -61,6 +61,30 @@ section[id]{scroll-margin-top:80px}
 .lead{margin:0 auto;max-width:460px;font:400 16px/1.6 'Hanken Grotesk',sans-serif;color:#9AA2C4}
 .grad{background:linear-gradient(120deg,#9B8CFF,#4FD6FF);-webkit-background-clip:text;background-clip:text;color:transparent}
 
+/* ---------- Nav mobile ---------- */
+.nav-burger{
+  display:none;align-items:center;justify-content:center;
+  width:40px;height:40px;border-radius:10px;cursor:pointer;
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);color:#E4E7F8;
+}
+.nav-mobile{
+  display:flex;flex-direction:column;gap:2px;padding:10px 22px 16px;
+  border-top:1px solid rgba(255,255,255,.06);
+}
+.nav-mobile a{
+  padding:13px 12px;border-radius:10px;
+  font:500 15px 'Hanken Grotesk',sans-serif;color:#C6CCE8;
+}
+.nav-mobile a:active{background:rgba(255,255,255,.07)}
+.nav-mobile .nav-mobile-cta{
+  margin-top:8px;text-align:center;background:linear-gradient(135deg,#7B5CFF,#4FA8FF);
+  color:#fff;font:600 15px 'Space Grotesk',sans-serif;
+}
+@media (min-width:901px){.nav-mobile{display:none}}
+@media (max-width:900px){.nav-burger{display:flex}.nav-in{padding:12px 20px !important}}
+/* petit mobile : le CTA du header cède la place au burger (il reste dans le menu) */
+@media (max-width:620px){.nav-demo{display:none}}
+
 /* ---------- Carrousel d'avis (Proof) ---------- */
 .avis-rail{
   overflow:hidden;
@@ -68,7 +92,16 @@ section[id]{scroll-margin-top:80px}
   mask-image:linear-gradient(90deg,transparent,#000 6%,#000 94%,transparent);
 }
 .avis-track{display:flex;gap:16px;width:max-content;animation:nx-slide 70s linear infinite}
-.avis-rail:hover .avis-track{animation-play-state:paused}
+.avis-rail:hover .avis-track,
+.avis-rail:focus-within .avis-track,
+.avis-track.paused{animation-play-state:paused}
+.rail-toggle{
+  display:inline-flex;align-items:center;gap:7px;cursor:pointer;
+  padding:7px 14px;border-radius:999px;
+  border:1px solid rgba(255,255,255,.16);background:rgba(255,255,255,.05);
+  font:600 12px 'Space Grotesk',sans-serif;color:#C6CCE8;transition:background .2s;
+}
+.rail-toggle:hover{background:rgba(255,255,255,.1)}
 @keyframes nx-slide{from{transform:translateX(0)}to{transform:translateX(-50%)}}
 @media (prefers-reduced-motion:reduce){
   /* sans animation : le rail devient scrollable horizontalement */
@@ -88,7 +121,8 @@ section[id]{scroll-margin-top:80px}
 /* ---------- Responsive ---------- */
 @media (max-width:900px){
   .wrap{padding:0 22px}
-  .nav-links,.nav-secondary{display:none}
+  /* !important : ces éléments portent un display inline (flex) qui gagnerait sinon */
+  .nav-links,.nav-secondary{display:none !important}
   .grid-3{grid-template-columns:1fr !important}
   .grid-4{grid-template-columns:1fr 1fr !important}
   .frise{gap:22px !important}
