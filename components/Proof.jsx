@@ -1,18 +1,10 @@
 /* ------------------------------------------------------------------
-   Données réelles — source : donnees_site_vitrine_ritech_final.docx
-   TODO restants : logos images (SVG/PNG) à la place des libellés texte,
-   photos réelles à la place des initiales.
+   Preuve : témoignage vedette + carrousel d'avis (slide droite → gauche,
+   pause au survol, boucle infinie via duplication du rail).
+   Verbatims exacts — source : donnees_site_vitrine_ritech_final.docx.
+   Les chiffres agence et références sont dans StatsBand (sous le hero).
+   TODO : photos réelles à la place des initiales.
    ------------------------------------------------------------------ */
-
-const AGENCY_STATS = [
-  { value: "+50", suffix: "", label: "applications livrées", sub: "SaaS & apps métier en prod cloud (AWS / GCP)" },
-  { value: "2", suffix: " sem.", label: "délai moyen", sub: "du cahier des charges au MVP en production" },
-  { value: "70", suffix: "%", label: "de temps gagné", sub: "sur les tâches opérationnelles répétitives" },
-  { value: "24/7", suffix: "", label: "assistance critique", sub: "incluse les 6 premiers mois post-livraison" },
-];
-
-// TODO: remplacer les libellés par les vrais logos <img> (SVG mono de préférence)
-const LOGOS = ["Auchan", "Primark", "Orange", "La FDJ", "Maintronic", "Sielo", "Vela"];
 
 const FEATURED = {
   quote:
@@ -102,7 +94,7 @@ function Stars({ color = "#8B7BFF" }) {
   return (
     <div style={{ display: "flex", gap: 2 }} aria-label="5 sur 5">
       {[0, 1, 2, 3, 4].map((i) => (
-        <svg key={i} width="14" height="14" viewBox="0 0 24 24" fill={color}>
+        <svg key={i} width="13" height="13" viewBox="0 0 24 24" fill={color}>
           <path d="M12 2l2.4 6.5L21 9l-5 4.3L17.6 20 12 16.5 6.4 20 8 13.3 3 9l6.6-.5L12 2z" />
         </svg>
       ))}
@@ -110,14 +102,14 @@ function Stars({ color = "#8B7BFF" }) {
   );
 }
 
-function Avatar({ initial, accent = "linear-gradient(135deg,#7B5CFF,#4FA8FF)", size = 40 }) {
+function Avatar({ initial, accent = "linear-gradient(135deg,#7B5CFF,#4FA8FF)", size = 36 }) {
   // TODO: remplacer par <img> réel une fois les photos disponibles
   return (
     <span
       style={{
         width: size, height: size, borderRadius: "50%", flexShrink: 0,
         background: accent, display: "flex", alignItems: "center", justifyContent: "center",
-        font: `600 ${Math.round(size * 0.34)}px 'Space Grotesk',sans-serif`, color: "#fff",
+        font: `600 ${Math.round(size * 0.33)}px 'Space Grotesk',sans-serif`, color: "#fff",
       }}
     >
       {initial}
@@ -125,52 +117,42 @@ function Avatar({ initial, accent = "linear-gradient(135deg,#7B5CFF,#4FA8FF)", s
   );
 }
 
+function AvisCard({ t, ariaHidden }) {
+  return (
+    <div
+      aria-hidden={ariaHidden || undefined}
+      style={{
+        width: 360, flexShrink: 0, padding: 20, borderRadius: 15, display: "flex", flexDirection: "column",
+        background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.1)",
+      }}
+    >
+      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, marginBottom: 10 }}>
+        <Stars color={t.accent} />
+        <span style={{ font: "600 10.5px 'Space Grotesk',sans-serif", color: t.accent, background: `color-mix(in srgb, ${t.accent} 14%, transparent)`, padding: "4px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
+          {t.impact}
+        </span>
+      </div>
+      <p style={{ margin: 0, font: "400 13px/1.6 'Hanken Grotesk',sans-serif", color: "#C6CCE8", flex: 1 }}>
+        « {t.quote} »
+      </p>
+      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 14 }}>
+        <Avatar initial={t.initial} accent={`linear-gradient(135deg,${t.accent},#4FA8FF)`} size={32} />
+        <div>
+          <div style={{ font: "600 12.5px 'Hanken Grotesk',sans-serif", color: "#EDEFFA" }}>{t.name}</div>
+          <div style={{ font: "400 11px 'Hanken Grotesk',sans-serif", color: "#7C84A8" }}>{t.role}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function Proof() {
   return (
     <section id="preuve" data-screen-label="Preuve" style={{ position: "relative", zIndex: 2, padding: "104px 0 0" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 32px" }}>
-        <div data-reveal="" style={{ textAlign: "center", marginBottom: 42 }}>
+        <div data-reveal="" style={{ textAlign: "center", marginBottom: 34 }}>
           <h2 className="h2">La preuve par les chiffres</h2>
           <p className="lead" style={{ maxWidth: 460 }}>Un ROI que vous pouvez mesurer, pas des promesses.</p>
-        </div>
-
-        {/* ---------- Chiffres agence ---------- */}
-        <div
-          data-reveal="" className="grid-4"
-          style={{ display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 18, marginBottom: 22 }}
-        >
-          {AGENCY_STATS.map((s) => (
-            <div
-              key={s.label}
-              style={{
-                padding: "28px 20px", borderRadius: 16, textAlign: "center",
-                background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.1)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 2 }}>
-                <span className="grad" style={{ font: "700 clamp(32px,4vw,46px)/1 'Space Grotesk',sans-serif", letterSpacing: "-.03em" }}>{s.value}</span>
-                {s.suffix && <span className="grad" style={{ font: "700 20px 'Space Grotesk',sans-serif" }}>{s.suffix}</span>}
-              </div>
-              <div style={{ marginTop: 10, font: "600 14.5px 'Space Grotesk',sans-serif", color: "#EDEFFA" }}>{s.label}</div>
-              <div style={{ marginTop: 3, font: "400 12.5px/1.5 'Hanken Grotesk',sans-serif", color: "#7C84A8" }}>{s.sub}</div>
-            </div>
-          ))}
-        </div>
-
-        {/* ---------- Bandeau références ---------- */}
-        <div data-reveal="" style={{ marginBottom: 40 }}>
-          <div style={{ textAlign: "center", font: "600 11px 'Space Grotesk',sans-serif", letterSpacing: ".14em", textTransform: "uppercase", color: "#6B7396", marginBottom: 6 }}>
-            Ils nous ont fait confiance
-          </div>
-          <div style={{ textAlign: "center", font: "400 12px 'Hanken Grotesk',sans-serif", color: "#5A6284", marginBottom: 18 }}>
-            En direct ou via nos partenaires (Experis, Fujitsu, Toshiba)
-          </div>
-          <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "14px 34px" }}>
-            {LOGOS.map((name) => (
-              // TODO: remplacer le texte par le vrai logo <img>
-              <span key={name} style={{ font: "600 15px 'Space Grotesk',sans-serif", color: "#8F97BA", opacity: 0.75 }}>{name}</span>
-            ))}
-          </div>
         </div>
 
         {/* ---------- Témoignage vedette ---------- */}
@@ -179,24 +161,23 @@ export default function Proof() {
           style={{
             borderRadius: 18, border: "1px solid rgba(139,124,255,.35)",
             background: "linear-gradient(135deg,rgba(123,92,255,.12),rgba(79,168,255,.07))",
-            padding: "44px 40px", display: "grid", gridTemplateColumns: "auto 1fr", gap: 48, alignItems: "center",
-            marginBottom: 18,
+            padding: "40px 38px", display: "grid", gridTemplateColumns: "auto 1fr", gap: 44, alignItems: "center",
           }}
         >
           <div>
-            <div className="grad" style={{ font: "700 clamp(48px,7vw,84px)/.9 'Space Grotesk',sans-serif", letterSpacing: "-.03em", marginBottom: 8 }}>
+            <div className="grad" style={{ font: "700 clamp(44px,6vw,76px)/.9 'Space Grotesk',sans-serif", letterSpacing: "-.03em", marginBottom: 8 }}>
               {FEATURED.value}
             </div>
-            <div style={{ font: "600 17px 'Space Grotesk',sans-serif", color: "#EDEFFA" }}>{FEATURED.unit}</div>
-            <div style={{ font: "400 14.5px 'Hanken Grotesk',sans-serif", color: "#9AA2C4", marginTop: 4 }}>{FEATURED.note}</div>
+            <div style={{ font: "600 16px 'Space Grotesk',sans-serif", color: "#EDEFFA" }}>{FEATURED.unit}</div>
+            <div style={{ font: "400 14px 'Hanken Grotesk',sans-serif", color: "#9AA2C4", marginTop: 4 }}>{FEATURED.note}</div>
           </div>
           <div>
             <Stars />
-            <p style={{ margin: "12px 0 18px", font: "400 clamp(15.5px,1.7vw,18px)/1.6 'Space Grotesk',sans-serif", color: "#EDEFFA" }}>
+            <p style={{ margin: "11px 0 16px", font: "400 clamp(14.5px,1.6vw,16.5px)/1.6 'Space Grotesk',sans-serif", color: "#EDEFFA" }}>
               « {FEATURED.quote} »
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 11 }}>
-              <Avatar initial={FEATURED.initial} />
+              <Avatar initial={FEATURED.initial} size={38} />
               <div>
                 <div style={{ font: "600 14px 'Hanken Grotesk',sans-serif", color: "#EDEFFA" }}>{FEATURED.name}</div>
                 <div style={{ font: "400 12.5px 'Hanken Grotesk',sans-serif", color: "#7C84A8" }}>{FEATURED.role}</div>
@@ -204,36 +185,14 @@ export default function Proof() {
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ---------- Avis clients ---------- */}
-        <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18 }}>
-          {TESTIMONIALS.map((t) => (
-            <div
-              key={t.name}
-              data-reveal=""
-              style={{
-                padding: "24px 22px", borderRadius: 16, display: "flex", flexDirection: "column",
-                background: "rgba(255,255,255,.03)", border: "1px solid rgba(255,255,255,.1)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10 }}>
-                <Stars color={t.accent} />
-                <span style={{ font: "600 11px 'Space Grotesk',sans-serif", color: t.accent, background: `color-mix(in srgb, ${t.accent} 14%, transparent)`, padding: "4px 10px", borderRadius: 999, whiteSpace: "nowrap" }}>
-                  {t.impact}
-                </span>
-              </div>
-              <p style={{ margin: "14px 0 18px", font: "400 13.5px/1.6 'Hanken Grotesk',sans-serif", color: "#C6CCE8", flex: 1 }}>
-                « {t.quote} »
-              </p>
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <Avatar initial={t.initial} accent={`linear-gradient(135deg,${t.accent},#4FA8FF)`} size={34} />
-                <div>
-                  <div style={{ font: "600 13px 'Hanken Grotesk',sans-serif", color: "#EDEFFA" }}>{t.name}</div>
-                  <div style={{ font: "400 11.5px 'Hanken Grotesk',sans-serif", color: "#7C84A8" }}>{t.role}</div>
-                </div>
-              </div>
-            </div>
-          ))}
+      {/* ---------- Carrousel d'avis : slide droite → gauche, pause au survol.
+           Le rail est dupliqué (2e copie aria-hidden) pour une boucle infinie. ---------- */}
+      <div data-reveal="" className="avis-rail" style={{ marginTop: 26 }}>
+        <div className="avis-track">
+          {TESTIMONIALS.map((t) => <AvisCard key={t.name} t={t} />)}
+          {TESTIMONIALS.map((t) => <AvisCard key={`dup-${t.name}`} t={t} ariaHidden />)}
         </div>
       </div>
     </section>

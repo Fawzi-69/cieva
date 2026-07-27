@@ -1,19 +1,24 @@
 import Hero3D from "@/components/Hero3D";
+import StatsBand from "@/components/StatsBand";
 import Histoire from "@/components/Histoire";
 import Reveal from "@/components/Reveal";
 import Starfield from "@/components/Starfield";
 import Nav from "@/components/Nav";
-import Vela from "@/components/Vela";
-import Workflow from "@/components/Workflow";
 import Products from "@/components/Products";
-import Custom from "@/components/Custom";
-import Demarche from "@/components/Demarche";
 import Proof from "@/components/Proof";
 import Team from "@/components/Team";
-import Faq from "@/components/Faq";
 import Cta from "@/components/Cta";
-import Contact from "@/components/Contact";
 import Footer from "@/components/Footer";
+
+/* Plan 1 « Resserrer » — ~6 écrans :
+   1. Hero 3D + chiffres & références (StatsBand)
+   2. Produits (constellation + 4e étoile)
+   3. Sur-mesure (fusion Histoire + personnalisation)
+   4. Preuve (vedette + carrousel d'avis)
+   5. 10 ans + équipe
+   6. CTA + contact fusionnés
+   Les anciennes sections Vela/Workflow/Custom/Demarche/Faq/Contact
+   restent dans components/ (réutilisables pour les pages du Plan 3). */
 
 export default function Home() {
   return (
@@ -23,17 +28,12 @@ export default function Home() {
       <Reveal />
       <main>
         <Hero3D />
-        <Vela />
-        <Workflow />
-        <Histoire />
+        <StatsBand />
         <Products />
-        <Custom />
-        <Demarche />
+        <Histoire />
         <Proof />
         <Team />
-        <Faq />
         <Cta />
-        <Contact />
       </main>
       <Footer />
     </div>

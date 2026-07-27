@@ -31,7 +31,6 @@ export default function Footer() {
             <a href="#sur-mesure" className="lnk" style={linkStyle}>Sur-mesure</a>
             <a href="#preuve" className="lnk" style={linkStyle}>Preuve & ROI</a>
             <a href="#equipe" className="lnk" style={linkStyle}>Équipe</a>
-            <a href="#demarche" className="lnk" style={linkStyle}>Démarche</a>
           </div>
         </div>
         <div>
