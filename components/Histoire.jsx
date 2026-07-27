@@ -1,3 +1,6 @@
+/* Fusion des anciennes sections Histoire + Sur-mesure (Plan 1) :
+   un seul écran, trois temps, qui intègre la promesse de personnalisation. */
+
 const BEATS = [
   {
     era: "Hier",
@@ -15,19 +18,20 @@ const BEATS = [
     era: "Pour vous",
     color: "#7C5CFF",
     title: "Votre application, sans vous ruiner",
-    body: "Vos règles, vos données, votre nom sur l'écran. Au prix d'un abonnement — pas d'un chantier. C'est ça, la promesse Cieva.",
+    body: "Votre logo, votre nom sur l'écran. Vos données isolées, jamais mutualisées. Vos règles métier — l'application suit votre façon de travailler, pas l'inverse. Au prix d'un abonnement, pas d'un chantier.",
   },
 ];
 
 export default function Histoire() {
   return (
-    <section id="histoire" data-screen-label="Histoire" style={{ position: "relative", zIndex: 2, padding: "104px 0 0" }}>
+    <section id="sur-mesure" data-screen-label="Sur-mesure" style={{ position: "relative", zIndex: 2, padding: "104px 0 0" }}>
       <div style={{ maxWidth: 1080, margin: "0 auto", padding: "0 32px" }}>
-        <div data-reveal="" style={{ textAlign: "center", marginBottom: 46 }}>
+        <div data-reveal="" style={{ textAlign: "center", marginBottom: 40 }}>
           <div style={{ font: "600 12px/1 'Space Grotesk',sans-serif", letterSpacing: ".24em", textTransform: "uppercase", color: "#7C84A8", marginBottom: 14 }}>
             Pourquoi maintenant
           </div>
           <h2 className="h2">Le sur-mesure n'est plus un luxe</h2>
+          <p className="lead" style={{ maxWidth: 440 }}>Pas un SaaS anonyme de plus — une application qui porte votre nom.</p>
         </div>
 
         <div className="grid-3" style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 18, position: "relative" }}>
