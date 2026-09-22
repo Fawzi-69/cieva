@@ -1,0 +1,15 @@
+{
+  "name": "cieva-copilot",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Copilote temps reel : ecoute la conversation, affiche la reponse a dire.",
+  "scripts": {
+    "start": "node server.mjs",
+    "test": "node --test test/format.test.mjs",
+    "check": "node --check server.mjs && node --check lib/claude.mjs && node --check lib/prompts.mjs && node --check lib/stt.mjs && node --check web/format.js && node --check web/app.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0"
+  }
+}

@@ -1,0 +1,417 @@
+/* Palette « Constellation » du design system Cieva, en version outil :
+   dense, sombre, lisible du coin de l'oeil. */
+:root {
+  --bg: #0b1430;
+  --bg-2: #0f1b3d;
+  --ink: #f4f7ff;
+  --ink-2: #eaf0ff;
+  --body: #a3b2d4;
+  --meta: #6e7ea3;
+  --kicker: #85a8e6;
+  --line: rgba(160, 180, 230, 0.16);
+  --glass: rgba(255, 255, 255, 0.04);
+  --accent-a: #3d74ff;
+  --accent-b: #7c5cff;
+  --live: #12a594;
+  --warn: #ffb545;
+  --bar-h: 52px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(1100px 600px at 80% -10%, rgba(124, 92, 255, 0.14), transparent),
+    radial-gradient(900px 500px at 10% 0%, rgba(60, 90, 200, 0.28), transparent),
+    linear-gradient(160deg, var(--bg), var(--bg-2));
+  color: var(--ink-2);
+  font: 15px/1.5 "Inter", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
+  overflow: hidden;
+}
+
+/* ---------- barre ---------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--bar-h);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(11, 20, 48, 0.72);
+  backdrop-filter: blur(10px);
+  flex: 0 0 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.bar::-webkit-scrollbar {
+  display: none;
+}
+
+.grow {
+  flex: 1;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  color: #fff;
+  font: 600 14px/1 "Space Grotesk", system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(61, 116, 255, 0.28);
+}
+
+.toggle .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+body.live .toggle {
+  background: rgba(18, 165, 148, 0.16);
+  color: #8ff0e2;
+  box-shadow: none;
+}
+
+body.live .toggle .dot {
+  background: var(--live);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--meta);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.field select {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--body);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.switch input {
+  accent-color: var(--accent-b);
+}
+
+.ghost {
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--body);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ghost:hover,
+.ghost:focus-visible {
+  border-color: rgba(124, 92, 255, 0.55);
+  color: var(--ink);
+}
+
+.ghost[aria-pressed="true"] {
+  border-color: rgba(124, 92, 255, 0.6);
+  color: var(--ink);
+  background: rgba(124, 92, 255, 0.14);
+}
+
+.meta {
+  color: var(--meta);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- panneaux ---------- */
+
+.panes {
+  display: grid;
+  grid-template-columns: minmax(260px, 34%) 1fr;
+  min-height: 0;
+  flex: 1;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px 14px 0;
+}
+
+.pane + .pane {
+  border-left: 1px solid var(--line);
+}
+
+.pane h2 {
+  margin: 0 0 8px;
+  color: var(--kicker);
+  font: 600 11px/1 "Space Grotesk", system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(160, 180, 230, 0.25) transparent;
+}
+
+/* ---------- transcription ---------- */
+
+.transcript .scroll p {
+  margin: 0 0 7px;
+  color: var(--body);
+  font-size: 14px;
+}
+
+.transcript .scroll p.question {
+  color: var(--ink);
+  border-left: 2px solid var(--accent-b);
+  padding-left: 8px;
+}
+
+.interim {
+  margin: 4px 0 12px;
+  min-height: 1.2em;
+  color: var(--meta);
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* ---------- reponses ---------- */
+
+.card {
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--glass);
+}
+
+.card.pending {
+  border-color: rgba(124, 92, 255, 0.45);
+}
+
+.card .q {
+  margin: 0 0 8px;
+  color: var(--meta);
+  font-size: 12px;
+}
+
+.card .lead {
+  margin: 0;
+  color: var(--ink);
+  font: 600 19px/1.35 "Space Grotesk", system-ui, sans-serif;
+}
+
+.card ul {
+  margin: 9px 0 0;
+  padding-left: 18px;
+}
+
+.card li {
+  margin-bottom: 5px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+}
+
+.card .caution {
+  margin: 9px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--warn);
+  font-size: 13.5px;
+}
+
+.card .clarify {
+  margin: 0;
+  color: var(--kicker);
+  font-size: 16px;
+}
+
+.card .tag {
+  float: right;
+  color: var(--meta);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.card.error {
+  border-color: rgba(255, 120, 120, 0.4);
+  color: #ffb3b3;
+}
+
+.card.skip {
+  color: var(--meta);
+  font-size: 13px;
+}
+
+.empty {
+  color: var(--meta);
+  font-size: 14px;
+  max-width: 44ch;
+}
+
+/* ---------- pied ---------- */
+
+.hint {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--meta);
+  font-size: 11.5px;
+}
+
+kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--glass);
+  font: inherit;
+  font-size: 11px;
+}
+
+/* ---------- mode compact : fenetre etroite, second ecran ---------- */
+
+body.compact .panes {
+  grid-template-columns: 1fr;
+}
+
+body.compact .transcript,
+body.compact .hint {
+  display: none;
+}
+
+body.compact .field,
+body.compact .switch {
+  display: none;
+}
+
+body.compact .card .lead {
+  font-size: 17px;
+}
+
+/* ---------- dossier ---------- */
+
+dialog {
+  width: min(680px, 92vw);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-2);
+  color: var(--ink-2);
+}
+
+dialog::backdrop {
+  background: rgba(6, 11, 28, 0.7);
+}
+
+dialog form {
+  padding: 18px 20px 20px;
+}
+
+dialog h2 {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font: 600 18px/1.2 "Space Grotesk", system-ui, sans-serif;
+}
+
+dialog p {
+  margin: 0 0 12px;
+  color: var(--body);
+  font-size: 13.5px;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--ink-2);
+  font: 13.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.primary {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  color: #fff;
+  font: 600 14px/1 "Space Grotesk", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+@media (max-width: 820px) {
+  .panes {
+    grid-template-columns: 1fr;
+  }
+  .transcript,
+  .hint {
+    display: none;
+  }
+  .field span,
+  .switch span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+  }
+}
