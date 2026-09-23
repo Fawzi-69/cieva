@@ -21,24 +21,30 @@ export const modelInfo = { model: MODEL, fast: FAST };
  * Retourne { text, usage, stopReason, servedBy }.
  */
 export async function suggest(
-  { mode, lang, profile, transcript, question, depth = 'flash' },
+  { mode, lang, profile, transcript, question, depth = 'flash', kind = 'answer' },
   { onDelta, signal } = {},
 ) {
   const betas = ['server-side-fallback-2026-07-01'];
   if (FAST) betas.push('fast-mode-2026-02-01');
 
+  // Les suppositions tournent en fond : toujours courtes, toujours a effort
+  // bas, quel que soit le reglage de profondeur des reponses.
+  const deep = kind === 'answer' && depth === 'deep';
+
   const params = {
     model: MODEL,
     // Sortie volontairement courte : le format tient en quelques lignes.
-    max_tokens: depth === 'deep' ? 6000 : 1500,
+    max_tokens: deep ? 6000 : 1200,
     // `low` pour la latence en direct, `high` quand on demande le detail.
-    output_config: { effort: depth === 'deep' ? 'high' : 'low' },
+    output_config: { effort: deep ? 'high' : 'low' },
     betas,
     // Si les classificateurs declinent la requete, l'API rejoue le meme
     // appel sur un modele de repli plutot que de renvoyer une reponse vide.
     fallbacks: 'default',
-    system: buildSystem({ mode, lang, profile }),
-    messages: [{ role: 'user', content: buildUserMessage({ transcript, question, depth }) }],
+    system: buildSystem({ mode, lang, profile, kind }),
+    messages: [
+      { role: 'user', content: buildUserMessage({ transcript, question, depth, kind }) },
+    ],
   };
   if (FAST) params.speed = 'fast';
 

@@ -57,17 +57,41 @@ export const MODE_LABELS = Object.fromEntries(
   MODE_KEYS.map((k) => [k, MODES[k].label]),
 );
 
+// Seconde lane : les suppositions. Ne repond pas a une question, anticipe la
+// suite. Tourne en fond, sur un rythme plus lent que les reponses.
+const ANTICIPATION = `Tu lis la transcription en direct d'une conversation professionnelle et tu prepares celui que tu assistes a ce qui arrive.
+
+Tu ne reponds a rien. Tu supposes.
+
+FORMAT, strict, une information par ligne, chaque ligne prefixee. Pas de preambule, pas de markdown, pas de ligne vide :
+CIBLE: ce que l'interlocuteur cherche vraiment sous ce qu'il dit, en une phrase.
+SUITE: une question ou une objection qui a de bonnes chances d'arriver ensuite.
+SUITE: une autre. (deux a trois lignes SUITE, pas plus)
+PREPARER: le chiffre, l'exemple ou le document a avoir sous la main tout de suite.
+RISQUE: l'endroit ou cet echange peut deraper, ou le malentendu en train de s'installer.
+
+REGLES :
+- Chaque ligne se tient seule et tient en 20 mots.
+- Suppose franchement a partir d'indices faibles : c'est le but. Mais ne fabrique aucun fait absent du dossier — une hypothese se formule comme une hypothese.
+- Si la conversation ne donne pas encore de matiere, renvoie exactement : "-".
+- N'ecris jamais deux fois la meme idee sous deux prefixes differents.`;
+
 /**
  * Prefixe stable : instructions + mode + dossier utilisateur.
  * Marque cacheable pour que les appels successifs d'une meme session
- * ne repaient pas ce prefixe.
+ * ne repaient pas ce prefixe. `kind` choisit la lane : reponse ou supposition.
  */
-export function buildSystem({ mode = 'reunion', lang = 'fr', profile = '' } = {}) {
+export function buildSystem({
+  mode = 'reunion',
+  lang = 'fr',
+  profile = '',
+  kind = 'answer',
+} = {}) {
   const chosen = MODES[mode] ?? MODES.reunion;
   const langName = LANGS[lang] ?? LANGS.fr;
 
   const parts = [
-    BASE,
+    kind === 'anticipate' ? ANTICIPATION : BASE,
     chosen.system,
     `LANGUE : ecris en ${langName}, quelle que soit la langue de la transcription.`,
   ];
@@ -92,9 +116,28 @@ export function buildSystem({ mode = 'reunion', lang = 'fr', profile = '' } = {}
  * Message utilisateur : la fenetre de transcription, puis la sollicitation.
  * Tout ce qui varie a chaque appel est ici, apres le point de cache.
  */
-export function buildUserMessage({ transcript = '', question = '', depth = 'flash' }) {
+export function buildUserMessage({
+  transcript = '',
+  question = '',
+  depth = 'flash',
+  kind = 'answer',
+}) {
   const window = transcript.trim() || '(rien encore)';
   const cible = question.trim();
+
+  if (kind === 'anticipate') {
+    return [
+      {
+        type: 'text',
+        text: `TRANSCRIPTION (les dernieres minutes) :
+"""
+${window}
+"""
+
+Donne maintenant tes suppositions sur la suite, au format impose.`,
+      },
+    ];
+  }
 
   const consigne =
     depth === 'deep'

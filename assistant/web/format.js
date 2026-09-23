@@ -50,3 +50,34 @@ export function parseAnswer(raw) {
 
   return { kind: 'answer', lead, bullets, caution };
 }
+
+/**
+ * Lane des suppositions. Le modele repond en lignes prefixees :
+ *   CIBLE: / SUITE: / PREPARER: / RISQUE:
+ * Renvoie { kind, cible, suites, preparer, risque }.
+ */
+export function parseAnticipation(raw) {
+  const empty = { kind: 'empty', cible: '', suites: [], preparer: '', risque: '' };
+  const lines = String(raw || '')
+    .split('\n')
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  if (!lines.length) return empty;
+  if (lines.length === 1 && lines[0] === '-') return { ...empty, kind: 'skip' };
+
+  const out = { kind: 'anticipation', cible: '', suites: [], preparer: '', risque: '' };
+  const take = (line, prefix) => line.slice(prefix.length).trim();
+
+  for (const line of lines) {
+    const upper = line.toUpperCase();
+    if (upper.startsWith('CIBLE:')) out.cible = take(line, 'CIBLE:');
+    else if (upper.startsWith('SUITE:')) out.suites.push(take(line, 'SUITE:'));
+    else if (upper.startsWith('PREPARER:')) out.preparer = take(line, 'PREPARER:');
+    else if (upper.startsWith('RISQUE:')) out.risque = take(line, 'RISQUE:');
+  }
+
+  // Aucun prefixe reconnu : le flux n'est pas encore exploitable.
+  const anything = out.cible || out.suites.length || out.preparer || out.risque;
+  return anything ? out : empty;
+}

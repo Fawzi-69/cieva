@@ -45,6 +45,7 @@
       <span id="meta" class="meta"></span>
       <button id="ask" class="ghost" type="button" title="Espace">Répondre</button>
       <button id="deep" class="ghost" type="button" title="D">Détailler</button>
+      <button id="anticipate" class="ghost" type="button" title="A">Supposer</button>
       <button id="compact" class="ghost" type="button" title="C">Compact</button>
       <button id="settingsBtn" class="ghost" type="button" title="P">Dossier</button>
     </header>
@@ -57,14 +58,25 @@
       </section>
 
       <section class="pane answers">
+        <section id="anticipation" class="anticipation" hidden>
+          <header>
+            <h2>Suppositions</h2>
+            <span id="anticipationAge" class="age"></span>
+          </header>
+          <p id="antCible" class="ant-cible"></p>
+          <ul id="antSuites" class="ant-suites"></ul>
+          <p id="antPreparer" class="ant-line ant-prep"></p>
+          <p id="antRisque" class="ant-line ant-risk"></p>
+        </section>
+
         <h2>À dire</h2>
         <div id="answers" class="scroll"></div>
       </section>
     </main>
 
     <footer class="hint" id="hint">
-      <kbd>Espace</kbd> répondre · <kbd>D</kbd> détailler · <kbd>C</kbd> compact ·
-      <kbd>P</kbd> dossier · <kbd>Échap</kbd> stopper
+      <kbd>Espace</kbd> répondre · <kbd>D</kbd> détailler · <kbd>A</kbd> supposer ·
+      <kbd>C</kbd> compact · <kbd>P</kbd> dossier · <kbd>Échap</kbd> stopper
     </footer>
 
     <dialog id="settings">

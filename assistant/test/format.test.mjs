@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { looksLikeQuestion, parseAnswer } from '../web/format.js';
+import { looksLikeQuestion, parseAnswer, parseAnticipation } from '../web/format.js';
 
 test('detecte les questions explicites et implicites', () => {
   for (const phrase of [
@@ -55,4 +55,43 @@ test('tolere un flux partiel en cours de streaming', () => {
 test('rattrape une ligne sans tiret en puce', () => {
   const answer = parseAnswer('Reponse courte.\nUn point de detail sans tiret.');
   assert.deepEqual(answer.bullets, ['Un point de detail sans tiret.']);
+});
+
+test('lit une supposition complete', () => {
+  const a = parseAnticipation(
+    'CIBLE: il compare deja avec un concurrent moins cher.\n' +
+      'SUITE: il va demander une remise sur la premiere annee.\n' +
+      'SUITE: il va vouloir parler au client transport en reference.\n' +
+      'PREPARER: le detail du cout de reprise des donnees.\n' +
+      'RISQUE: laisser croire que les 2 semaines incluent la formation.',
+  );
+  assert.equal(a.kind, 'anticipation');
+  assert.match(a.cible, /^il compare/);
+  assert.equal(a.suites.length, 2);
+  assert.match(a.preparer, /^le detail/);
+  assert.match(a.risque, /^laisser croire/);
+});
+
+test('supporte une supposition partielle en cours de streaming', () => {
+  const a = parseAnticipation('CIBLE: il compare deja avec un\nSUITE: il va dem');
+  assert.equal(a.kind, 'anticipation');
+  assert.equal(a.suites.length, 1);
+  assert.equal(a.preparer, '');
+  assert.equal(a.risque, '');
+});
+
+test('ignore un flux de supposition sans prefixe reconnu', () => {
+  assert.equal(parseAnticipation('Deux semaines sur base eprouvee.').kind, 'empty');
+  assert.equal(parseAnticipation('').kind, 'empty');
+});
+
+test('reconnait l absence de matiere a supposer', () => {
+  assert.equal(parseAnticipation('-').kind, 'skip');
+});
+
+test('tolere les prefixes en minuscules', () => {
+  const a = parseAnticipation('cible: il teste notre delai.\nrisque: promettre trop vite.');
+  assert.equal(a.kind, 'anticipation');
+  assert.match(a.cible, /^il teste/);
+  assert.match(a.risque, /^promettre/);
 });

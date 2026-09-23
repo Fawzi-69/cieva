@@ -115,6 +115,7 @@ async function handleSuggest(req, res) {
         transcript: payload.transcript,
         question: payload.question,
         depth: payload.depth,
+        kind: payload.kind,
       },
       {
         signal: controller.signal,

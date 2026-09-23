@@ -2,7 +2,7 @@
 // Tout est local : l'audio ne quitte le poste que pour la transcription
 // (source "onglet/ecran"), et la transcription texte pour la suggestion.
 
-import { looksLikeQuestion, parseAnswer } from './format.js';
+import { looksLikeQuestion, parseAnswer, parseAnticipation } from './format.js';
 
 const $ = (id) => document.getElementById(id);
 
@@ -16,6 +16,7 @@ const el = {
   meta: $('meta'),
   ask: $('ask'),
   deep: $('deep'),
+  anticipate: $('anticipate'),
   compact: $('compact'),
   settingsBtn: $('settingsBtn'),
   settings: $('settings'),
@@ -24,18 +25,29 @@ const el = {
   transcript: $('transcript'),
   interim: $('interim'),
   answers: $('answers'),
+  anticipation: $('anticipation'),
+  anticipationAge: $('anticipationAge'),
+  antCible: $('antCible'),
+  antSuites: $('antSuites'),
+  antPreparer: $('antPreparer'),
+  antRisque: $('antRisque'),
 };
 
 const STORE = 'cieva-copilot';
 const MAX_TURNS = 60; // fenetre de transcription envoyee au modele
+const ANTICIPATION_WORDS = 45; // matiere neuve avant une supposition automatique
 
 const state = {
   live: false,
   turns: [], // { text, question, at }
-  pending: null, // AbortController de la suggestion en cours
+  pending: null, // AbortController de la reponse en cours
+  anticipating: null, // AbortController de la supposition en cours
   silenceTimer: null,
   wordsSinceAsk: 0,
+  wordsSinceAnticipation: 0,
+  anticipatedAt: null,
   health: null,
+  shell: null, // infos de la coque bureau, null dans un navigateur
 };
 
 /* ---------------- preferences ---------------- */
@@ -87,7 +99,10 @@ function addTurn(text) {
   const turn = { text: clean, question: looksLikeQuestion(clean), at: Date.now() };
   state.turns.push(turn);
   if (state.turns.length > MAX_TURNS) state.turns.shift();
-  state.wordsSinceAsk += clean.split(/\s+/).length;
+
+  const words = clean.split(/\s+/).length;
+  state.wordsSinceAsk += words;
+  state.wordsSinceAnticipation += words;
 
   const p = document.createElement('p');
   p.textContent = clean;
@@ -119,6 +134,9 @@ function scheduleAuto(turn) {
   // et un minimum de matiere nouvelle.
   const delay = turn.question ? 250 : Number(el.silence.value);
   state.silenceTimer = setTimeout(() => {
+    // Les suppositions tournent en fond, sur un rythme plus lent, et ne
+    // prennent jamais la place d'une reponse.
+    if (state.wordsSinceAnticipation >= ANTICIPATION_WORDS) anticipate();
     if (!turn.question && state.wordsSinceAsk < 8) return;
     ask({ depth: 'flash' });
   }, delay);
@@ -185,13 +203,55 @@ function paint(body, raw) {
   }
 }
 
+/**
+ * Ouvre le flux SSE et rappelle les gestionnaires au fil des fragments.
+ * Partage par les deux lanes : reponses et suppositions.
+ */
+async function streamSuggest(payload, { signal, onFirst, onText, onDone, onError }) {
+  const response = await fetch('/api/suggest', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    signal,
+    body: JSON.stringify(payload),
+  });
+
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let buffer = '';
+  let raw = '';
+
+  for (;;) {
+    const { value, done } = await reader.read();
+    if (done) break;
+    buffer += decoder.decode(value, { stream: true });
+
+    const frames = buffer.split('\n\n');
+    buffer = frames.pop() ?? '';
+
+    for (const frame of frames) {
+      const event = /^event: (.+)$/m.exec(frame)?.[1];
+      const dataLine = /^data: (.+)$/m.exec(frame)?.[1];
+      if (!event || !dataLine) continue;
+      const data = JSON.parse(dataLine);
+
+      if (event === 'first') onFirst?.(data);
+      else if (event === 'delta') {
+        raw += data.text;
+        onText?.(raw);
+      } else if (event === 'done') onDone?.(data.text || raw, data);
+      else if (event === 'error') onError?.(data.message);
+    }
+  }
+  return raw;
+}
+
 async function ask({ depth = 'flash' } = {}) {
   if (!state.turns.length) {
     el.meta.textContent = 'rien à traiter';
     return;
   }
 
-  // Une seule suggestion a la fois : la plus recente gagne.
+  // Une seule reponse a la fois : la plus recente gagne.
   state.pending?.abort();
   clearTimeout(state.silenceTimer);
   state.wordsSinceAsk = 0;
@@ -201,75 +261,136 @@ async function ask({ depth = 'flash' } = {}) {
   const controller = new AbortController();
   state.pending = controller;
 
-  let raw = '';
   const tag = document.createElement('span');
   tag.className = 'tag';
   card.querySelector('.q').prepend(tag);
 
+  const fail = (message) => {
+    card.classList.add('error');
+    card.classList.remove('pending');
+    body.textContent = message;
+  };
+
   try {
-    const response = await fetch('/api/suggest', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      signal: controller.signal,
-      body: JSON.stringify({
+    await streamSuggest(
+      {
+        kind: 'answer',
         mode: el.mode.value,
         lang: el.lang.value,
         depth,
         profile: el.profile.value,
         transcript: transcriptWindow(),
         question,
-      }),
-    });
-
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    for (;;) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      const frames = buffer.split('\n\n');
-      buffer = frames.pop() ?? '';
-
-      for (const frame of frames) {
-        const event = /^event: (.+)$/m.exec(frame)?.[1];
-        const dataLine = /^data: (.+)$/m.exec(frame)?.[1];
-        if (!event || !dataLine) continue;
-        const data = JSON.parse(dataLine);
-
-        if (event === 'first') {
+      },
+      {
+        signal: controller.signal,
+        onFirst: (data) => {
           tag.textContent = `${data.ms} ms`;
-        } else if (event === 'delta') {
-          raw += data.text;
-          paint(body, raw);
-        } else if (event === 'done') {
-          paint(body, data.text || raw);
+        },
+        onText: (raw) => paint(body, raw),
+        onDone: (text, data) => {
+          paint(body, text);
           card.classList.remove('pending');
           el.meta.textContent = `${data.firstMs ?? '—'} ms · ${data.usage.output} tok${
             data.usage.cacheRead ? ' · cache ✓' : ''
           }`;
-        } else if (event === 'error') {
-          card.classList.add('error');
-          card.classList.remove('pending');
-          body.textContent = data.message;
-        }
-      }
-    }
+        },
+        onError: fail,
+      },
+    );
   } catch (error) {
     if (error.name === 'AbortError') {
       card.remove();
       return;
     }
-    card.classList.add('error');
-    card.classList.remove('pending');
-    body.textContent = error.message;
+    fail(error.message);
   } finally {
     card.classList.remove('pending');
     if (state.pending === controller) state.pending = null;
   }
 }
+
+/* ---------------- lane des suppositions ---------------- */
+
+function paintAnticipation(raw) {
+  const a = parseAnticipation(raw);
+  if (a.kind === 'empty') return;
+
+  if (a.kind === 'skip') {
+    el.anticipation.hidden = true;
+    return;
+  }
+
+  el.anticipation.hidden = false;
+  el.antCible.textContent = a.cible;
+  el.antCible.hidden = !a.cible;
+
+  el.antSuites.textContent = '';
+  for (const suite of a.suites) {
+    const li = document.createElement('li');
+    li.textContent = suite;
+    el.antSuites.append(li);
+  }
+
+  el.antPreparer.textContent = a.preparer;
+  el.antPreparer.hidden = !a.preparer;
+  el.antRisque.textContent = a.risque;
+  el.antRisque.hidden = !a.risque;
+}
+
+function refreshAnticipationAge() {
+  if (!state.anticipatedAt) {
+    el.anticipationAge.textContent = '';
+    return;
+  }
+  const seconds = Math.round((Date.now() - state.anticipatedAt) / 1000);
+  el.anticipationAge.textContent =
+    seconds < 60 ? `il y a ${seconds} s` : `il y a ${Math.round(seconds / 60)} min`;
+}
+
+async function anticipate() {
+  if (!state.turns.length) return;
+
+  state.anticipating?.abort();
+  state.wordsSinceAnticipation = 0;
+
+  const controller = new AbortController();
+  state.anticipating = controller;
+  el.anticipation.classList.add('loading');
+
+  try {
+    await streamSuggest(
+      {
+        kind: 'anticipate',
+        mode: el.mode.value,
+        lang: el.lang.value,
+        profile: el.profile.value,
+        transcript: transcriptWindow(),
+      },
+      {
+        signal: controller.signal,
+        onText: paintAnticipation,
+        onDone: (text) => {
+          paintAnticipation(text);
+          state.anticipatedAt = Date.now();
+          refreshAnticipationAge();
+        },
+        // Une supposition ratee ne doit pas polluer la lane des reponses :
+        // elle laisse simplement l'ancienne en place.
+        onError: (message) => {
+          el.meta.textContent = `suppositions : ${message}`;
+        },
+      },
+    );
+  } catch (error) {
+    if (error.name !== 'AbortError') el.meta.textContent = `suppositions : ${error.message}`;
+  } finally {
+    el.anticipation.classList.remove('loading');
+    if (state.anticipating === controller) state.anticipating = null;
+  }
+}
+
+setInterval(refreshAnticipationAge, 10000);
 
 /* ---------------- capture : micro (Web Speech API) ---------------- */
 
@@ -450,6 +571,7 @@ function emptyState() {
 el.toggle.addEventListener('click', () => (state.live ? stop() : start()));
 el.ask.addEventListener('click', () => ask({ depth: 'flash' }));
 el.deep.addEventListener('click', () => ask({ depth: 'deep' }));
+el.anticipate.addEventListener('click', () => anticipate());
 el.compact.addEventListener('click', () => {
   setCompact(!document.body.classList.contains('compact'));
   savePrefs();
@@ -476,6 +598,8 @@ document.addEventListener('keydown', (event) => {
     ask({ depth: 'flash' });
   } else if (event.key === 'd' || event.key === 'D') {
     ask({ depth: 'deep' });
+  } else if (event.key === 'a' || event.key === 'A') {
+    anticipate();
   } else if (event.key === 'c' || event.key === 'C') {
     setCompact(!document.body.classList.contains('compact'));
     savePrefs();
@@ -486,12 +610,46 @@ document.addEventListener('keydown', (event) => {
   }
 });
 
+/* ---------------- coque bureau ---------------- */
+
+// Dans le navigateur, `window.copilotShell` n'existe pas et rien de tout ceci
+// ne s'active : la page reste utilisable telle quelle.
+async function wireShell() {
+  const shell = window.copilotShell;
+  if (!shell) return;
+
+  state.shell = await shell.info();
+  document.body.classList.add('overlay');
+  setCompact(true);
+
+  // Les raccourcis globaux du processus principal arrivent ici : ils
+  // fonctionnent alors que le focus est resté dans la visio.
+  shell.onCommand(({ command, payload }) => {
+    if (command === 'ask') ask({ depth: 'flash' });
+    else if (command === 'deep') ask({ depth: 'deep' });
+    else if (command === 'anticipate') anticipate();
+    else if (command === 'clickthrough') {
+      document.body.classList.toggle('through', Boolean(payload));
+    }
+  });
+
+  const badge = document.createElement('span');
+  badge.className = `shield ${state.shell.protection ? 'on' : 'off'}`;
+  badge.textContent = state.shell.protection ? 'Hors capture' : 'Capturable';
+  badge.title = state.shell.protection
+    ? 'La fenêtre est exclue du partage d’écran et des captures.'
+    : state.shell.protectionRequested
+      ? 'Linux : aucune exclusion de capture n’existe, la fenêtre reste visible.'
+      : 'Protection désactivée via COPILOT_NO_PROTECT=1.';
+  el.meta.after(badge);
+}
+
 /* ---------------- crochet de test ---------------- */
 
 // Expose de quoi simuler une transcription, uniquement sur /?debug=1.
 // Sert aux tests navigateur ; inactif en usage normal.
 if (new URLSearchParams(location.search).has('debug')) {
-  window.__copilot = { addTurn, ask, state };
+  window.__copilot = { addTurn, ask, anticipate, paintAnticipation, state };
 }
 
 /* ---------------- demarrage ---------------- */
@@ -518,4 +676,6 @@ if (new URLSearchParams(location.search).has('debug')) {
   el.meta.textContent = state.health
     ? `${state.health.model}${state.health.fast ? ' · rapide' : ''}`
     : 'serveur injoignable';
+
+  await wireShell();
 })();
