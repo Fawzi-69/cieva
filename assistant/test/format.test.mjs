@@ -1,6 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { looksLikeQuestion, parseAnswer, parseAnticipation } from '../web/format.js';
+import {
+  looksLikeQuestion,
+  parseAnswer,
+  parseAnticipation,
+  renderTranscript,
+} from '../web/format.js';
+
+const SPEAKERS = { them: { tag: 'EUX' }, you: { tag: 'VOUS' } };
 
 test('detecte les questions explicites et implicites', () => {
   for (const phrase of [
@@ -87,6 +94,40 @@ test('ignore un flux de supposition sans prefixe reconnu', () => {
 
 test('reconnait l absence de matiere a supposer', () => {
   assert.equal(parseAnticipation('-').kind, 'skip');
+});
+
+test('etiquette la transcription par locuteur', () => {
+  const rendu = renderTranscript(
+    [
+      { speaker: 'them', text: 'Votre solution coute combien ?' },
+      { speaker: 'you', text: 'Deux semaines sur une base eprouvee.' },
+      { speaker: 'them', text: 'Et la reprise des donnees ?' },
+    ],
+    SPEAKERS,
+  );
+  assert.equal(
+    rendu,
+    'EUX : Votre solution coute combien ?\n' +
+      'VOUS : Deux semaines sur une base eprouvee.\n' +
+      'EUX : Et la reprise des donnees ?',
+  );
+});
+
+test('regroupe les tours consecutifs d un meme locuteur', () => {
+  const rendu = renderTranscript(
+    [
+      { speaker: 'them', text: 'Bonjour.' },
+      { speaker: 'them', text: 'Merci de nous recevoir.' },
+      { speaker: 'you', text: 'Avec plaisir.' },
+    ],
+    SPEAKERS,
+  );
+  assert.equal(rendu, 'EUX : Bonjour. Merci de nous recevoir.\nVOUS : Avec plaisir.');
+});
+
+test('retombe sur EUX pour un locuteur inconnu', () => {
+  assert.equal(renderTranscript([{ speaker: 'autre', text: 'Ok.' }], SPEAKERS), 'EUX : Ok.');
+  assert.equal(renderTranscript([], SPEAKERS), '');
 });
 
 test('tolere les prefixes en minuscules', () => {

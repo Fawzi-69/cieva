@@ -12,8 +12,9 @@ try {
 }
 
 const { suggest, describeError, modelInfo } = await import('./lib/claude.mjs');
-const { transcribe, sttAvailable } = await import('./lib/stt.mjs');
+const { LiveTranscriber, sttAvailable, SAMPLE_RATE } = await import('./lib/transcriber.mjs');
 const { MODE_LABELS } = await import('./lib/prompts.mjs');
+const { WebSocketServer } = await import('ws');
 
 const PORT = Number(process.env.PORT || 4321);
 const HOST = process.env.HOST || '127.0.0.1';
@@ -151,20 +152,6 @@ async function handleSuggest(req, res) {
   }
 }
 
-async function handleTranscribe(req, res) {
-  const url = new URL(req.url, 'http://localhost');
-  try {
-    const audio = await readBody(req);
-    const text = await transcribe(audio, {
-      lang: url.searchParams.get('lang') || 'fr',
-      mimeType: req.headers['content-type'] || 'audio/webm',
-    });
-    json(res, 200, { text });
-  } catch (error) {
-    json(res, 502, { error: error.message });
-  }
-}
-
 const server = http.createServer((req, res) => {
   const route = req.url.split('?')[0];
 
@@ -174,15 +161,75 @@ const server = http.createServer((req, res) => {
       model: modelInfo.model,
       fast: modelInfo.fast,
       sttAvailable,
+      sampleRate: SAMPLE_RATE,
       hasApiKey: Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN),
       modes: MODE_LABELS,
     });
   }
   if (req.method === 'POST' && route === '/api/suggest') return handleSuggest(req, res);
-  if (req.method === 'POST' && route === '/api/transcribe') return handleTranscribe(req, res);
   if (req.method === 'GET') return serveStatic(req, res);
 
   json(res, 405, { error: 'Methode non autorisee' });
+});
+
+/* ---------------- audio en streaming, un canal par locuteur ---------------- */
+
+// Le navigateur ouvre une connexion par canal ("you" / "them"), annonce la
+// langue, puis pousse du PCM 16 bits / 16 kHz. On relaie vers Deepgram et on
+// renvoie les resultats partiels puis definitifs sur la meme connexion.
+const audioSockets = new WebSocketServer({ noServer: true });
+
+audioSockets.on('connection', (socket) => {
+  let live = null;
+
+  const reply = (payload) => {
+    if (socket.readyState === socket.OPEN) socket.send(JSON.stringify(payload));
+  };
+
+  socket.on('message', (data, isBinary) => {
+    if (isBinary) {
+      live?.send(data);
+      return;
+    }
+
+    let message;
+    try {
+      message = JSON.parse(data.toString('utf8'));
+    } catch {
+      return;
+    }
+
+    if (message.type === 'start') {
+      live?.close();
+      try {
+        live = new LiveTranscriber({
+          lang: message.lang,
+          onInterim: (text) => reply({ type: 'interim', text }),
+          onFinal: (text) => reply({ type: 'final', text }),
+          onError: (error) => reply({ type: 'error', message: error }),
+        });
+        reply({ type: 'ready', sampleRate: SAMPLE_RATE });
+      } catch (error) {
+        reply({ type: 'error', message: error.message });
+      }
+    } else if (message.type === 'stop') {
+      live?.close();
+      live = null;
+    }
+  });
+
+  socket.on('close', () => {
+    live?.close();
+    live = null;
+  });
+});
+
+server.on('upgrade', (req, socket, head) => {
+  if (req.url.split('?')[0] !== '/ws/audio') {
+    socket.destroy();
+    return;
+  }
+  audioSockets.handleUpgrade(req, socket, head, (ws) => audioSockets.emit('connection', ws, req));
 });
 
 server.listen(PORT, HOST, () => {
@@ -190,5 +237,7 @@ server.listen(PORT, HOST, () => {
   console.log(`\n  Copilote pret        http://${HOST}:${PORT}`);
   console.log(`  Modele               ${modelInfo.model}${modelInfo.fast ? ' (mode rapide)' : ''}`);
   console.log(`  Cle Anthropic        ${key ? 'detectee' : 'ABSENTE -> voir assistant/.env'}`);
-  console.log(`  Source systeme       ${sttAvailable ? 'active (Deepgram)' : 'inactive (micro seulement)'}\n`);
+  console.log(
+    `  Transcription        ${sttAvailable ? 'streaming Deepgram, 2 canaux' : 'repli Web Speech API (micro seul, sans choix d\'appareil)'}\n`,
+  );
 });

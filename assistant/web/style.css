@@ -201,12 +201,123 @@ body.live .toggle .dot {
   scrollbar-color: rgba(160, 180, 230, 0.25) transparent;
 }
 
+/* ---------- panneau audio ---------- */
+
+.audio {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.audio-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.audio-row .src {
+  flex: 1;
+  min-width: 0;
+  color: var(--meta);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+select.src {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+select.src:disabled {
+  opacity: 0.45;
+}
+
+/* Vu-metre : une barre remplie a hauteur de --level. */
+.meter {
+  width: 72px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(160, 180, 230, 0.16);
+  overflow: hidden;
+}
+
+.meter i {
+  display: block;
+  width: calc(var(--level, 0) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--live), var(--accent-b));
+  transition: width 80ms linear;
+}
+
+.audio-row.on .meter {
+  background: rgba(18, 165, 148, 0.2);
+}
+
+.who {
+  display: inline-block;
+  min-width: 42px;
+  font: 600 12px/1 "Space Grotesk", system-ui, sans-serif;
+}
+
+.who.them {
+  color: var(--kicker);
+}
+
+.who.you {
+  color: #8ff0e2;
+}
+
+.audio-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.hintline {
+  flex: 1 1 100%;
+  margin: 4px 0 0;
+  color: var(--warn);
+  font-size: 12px;
+}
+
+.hintline code {
+  font-size: 11.5px;
+}
+
 /* ---------- transcription ---------- */
 
 .transcript .scroll p {
   margin: 0 0 7px;
   color: var(--body);
   font-size: 14px;
+}
+
+.transcript .turn .who {
+  min-width: 0;
+  margin-right: 7px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Ce que vous avez dit s'efface : l'oeil doit aller a l'autre voix. */
+.transcript .turn.you {
+  color: var(--meta);
 }
 
 .transcript .scroll p.question {

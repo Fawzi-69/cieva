@@ -6,8 +6,19 @@ const LANGS = {
   en: 'anglais',
 };
 
+// Regle commune aux deux lanes : la transcription est etiquetee par locuteur.
+// C'est ce qui evite de repondre a soi-meme et de repeter ce qui vient d'etre dit.
+const LOCUTEURS = `TRANSCRIPTION ETIQUETEE : chaque ligne commence par son locuteur.
+- "EUX :" l'interlocuteur. C'est a lui, et a lui seul, que tu reponds.
+- "VOUS :" la personne que tu assistes. C'est deja sorti de sa bouche.
+
+Ce que "VOUS" a deja dit est acquis : ne le fais jamais redire. Si la reponse a ete donnee et que l'interlocuteur revient dessus, c'est qu'elle n'a pas convaincu — prends un autre angle, un exemple, un chiffre, jamais la meme phrase.
+Quand une ligne "VOUS" est la derniere, tu ne reponds pas : tu prepares la suite.`;
+
 const BASE = `Tu es le copilote temps reel d'un professionnel en pleine conversation.
 Tu lis une transcription automatique, donc imparfaite : fautes, mots coupes, ponctuation approximative, parfois un mot pour un autre. Reconstitue l'intention, ne commente jamais la qualite de la transcription.
+
+${LOCUTEURS}
 
 Ta sortie est lue en une seconde, du coin de l'oeil, pendant que quelqu'un parle.
 
@@ -60,6 +71,8 @@ export const MODE_LABELS = Object.fromEntries(
 // Seconde lane : les suppositions. Ne repond pas a une question, anticipe la
 // suite. Tourne en fond, sur un rythme plus lent que les reponses.
 const ANTICIPATION = `Tu lis la transcription en direct d'une conversation professionnelle et tu prepares celui que tu assistes a ce qui arrive.
+
+${LOCUTEURS}
 
 Tu ne reponds a rien. Tu supposes.
 
@@ -129,7 +142,7 @@ export function buildUserMessage({
     return [
       {
         type: 'text',
-        text: `TRANSCRIPTION (les dernieres minutes) :
+        text: `TRANSCRIPTION (les dernieres minutes, etiquetee par locuteur) :
 """
 ${window}
 """
@@ -147,12 +160,12 @@ Donne maintenant tes suppositions sur la suite, au format impose.`,
   return [
     {
       type: 'text',
-      text: `TRANSCRIPTION (les dernieres minutes, l'interlocuteur parle) :
+      text: `TRANSCRIPTION (les dernieres minutes, etiquetee par locuteur) :
 """
 ${window}
 """
 
-${cible ? `A TRAITER MAINTENANT : "${cible}"` : 'A TRAITER MAINTENANT : la derniere chose dite ci-dessus.'}
+${cible ? `A TRAITER MAINTENANT : "${cible}"` : 'A TRAITER MAINTENANT : la derniere chose dite par EUX ci-dessus.'}
 
 ${consigne}`,
     },

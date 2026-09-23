@@ -2,22 +2,43 @@
 // Tout est local : l'audio ne quitte le poste que pour la transcription
 // (source "onglet/ecran"), et la transcription texte pour la suggestion.
 
-import { looksLikeQuestion, parseAnswer, parseAnticipation } from './format.js';
+import { looksLikeQuestion, parseAnswer, parseAnticipation, renderTranscript } from './format.js';
+import { AudioChannel, listMicrophones, onDeviceChange, openMicStream, openSystemStream } from './audio.js';
 
 const $ = (id) => document.getElementById(id);
+
+// Les deux locuteurs. `tag` est ce que voit le modele, `label` ce que voit
+// l'utilisateur — les deux ne changent qu'ici.
+const SPEAKERS = {
+  them: { tag: 'EUX', label: 'Eux' },
+  you: { tag: 'VOUS', label: 'Vous' },
+};
 
 const el = {
   toggle: $('toggle'),
   toggleLabel: $('toggleLabel'),
   mode: $('mode'),
   lang: $('lang'),
-  source: $('source'),
   auto: $('auto'),
   meta: $('meta'),
   ask: $('ask'),
   deep: $('deep'),
   anticipate: $('anticipate'),
   compact: $('compact'),
+  audioBtn: $('audioBtn'),
+  audioPanel: $('audioPanel'),
+  micDevice: $('micDevice'),
+  micHint: $('micHint'),
+  deviceCount: $('deviceCount'),
+  refreshDevicesBtn: $('refreshDevices'),
+  wantYou: $('wantYou'),
+  wantThem: $('wantThem'),
+  toggleYou: $('toggleYou'),
+  toggleThem: $('toggleThem'),
+  rowYou: $('rowYou'),
+  rowThem: $('rowThem'),
+  levelYou: $('levelYou'),
+  levelThem: $('levelThem'),
   settingsBtn: $('settingsBtn'),
   settings: $('settings'),
   profile: $('profile'),
@@ -39,7 +60,8 @@ const ANTICIPATION_WORDS = 45; // matiere neuve avant une supposition automatiqu
 
 const state = {
   live: false,
-  turns: [], // { text, question, at }
+  interim: { you: '', them: '' },
+  turns: [], // { text, speaker, question, at }
   pending: null, // AbortController de la reponse en cours
   anticipating: null, // AbortController de la supposition en cours
   silenceTimer: null,
@@ -62,7 +84,11 @@ function loadPrefs() {
   el.profile.value = saved.profile || '';
   if (saved.mode) el.mode.value = saved.mode;
   if (saved.lang) el.lang.value = saved.lang;
-  if (saved.source) el.source.value = saved.source;
+  // L'appareil est reapplique une fois la liste peuplee : les identifiants
+  // ne sont connus qu'apres enumerateDevices.
+  state.wantedMic = saved.micDevice || 'default';
+  if (typeof saved.wantYou === 'boolean') el.wantYou.checked = saved.wantYou;
+  if (typeof saved.wantThem === 'boolean') el.wantThem.checked = saved.wantThem;
   if (saved.silence) el.silence.value = saved.silence;
   if (typeof saved.auto === 'boolean') el.auto.checked = saved.auto;
   if (saved.compact) setCompact(true);
@@ -73,7 +99,9 @@ function savePrefs() {
     profile: el.profile.value,
     mode: el.mode.value,
     lang: el.lang.value,
-    source: el.source.value,
+    micDevice: el.micDevice.value,
+    wantYou: el.wantYou.checked,
+    wantThem: el.wantThem.checked,
     silence: el.silence.value,
     auto: el.auto.checked,
     compact: document.body.classList.contains('compact'),
@@ -92,11 +120,17 @@ function setCompact(on) {
 
 /* ---------------- transcription : affichage ---------------- */
 
-function addTurn(text) {
+function addTurn(text, speaker = 'them') {
   const clean = text.trim();
   if (!clean) return;
 
-  const turn = { text: clean, question: looksLikeQuestion(clean), at: Date.now() };
+  const turn = {
+    text: clean,
+    speaker,
+    // Seules les questions de l'interlocuteur appellent une reponse.
+    question: speaker === 'them' && looksLikeQuestion(clean),
+    at: Date.now(),
+  };
   state.turns.push(turn);
   if (state.turns.length > MAX_TURNS) state.turns.shift();
 
@@ -105,8 +139,11 @@ function addTurn(text) {
   state.wordsSinceAnticipation += words;
 
   const p = document.createElement('p');
-  p.textContent = clean;
-  if (turn.question) p.className = 'question';
+  p.className = `turn ${speaker}${turn.question ? ' question' : ''}`;
+  const who = document.createElement('span');
+  who.className = 'who';
+  who.textContent = SPEAKERS[speaker].label;
+  p.append(who, document.createTextNode(clean));
   el.transcript.append(p);
   el.transcript.scrollTop = el.transcript.scrollHeight;
 
@@ -114,14 +151,18 @@ function addTurn(text) {
 }
 
 function transcriptWindow() {
-  return state.turns.map((t) => t.text).join('\n');
+  return renderTranscript(state.turns, SPEAKERS);
 }
 
 function lastQuestion() {
   for (let i = state.turns.length - 1; i >= 0; i -= 1) {
     if (state.turns[i].question) return state.turns[i].text;
   }
-  return state.turns.at(-1)?.text || '';
+  // A defaut, la derniere chose dite par l'interlocuteur.
+  for (let i = state.turns.length - 1; i >= 0; i -= 1) {
+    if (state.turns[i].speaker === 'them') return state.turns[i].text;
+  }
+  return '';
 }
 
 /* ---------------- declenchement ---------------- */
@@ -137,6 +178,10 @@ function scheduleAuto(turn) {
     // Les suppositions tournent en fond, sur un rythme plus lent, et ne
     // prennent jamais la place d'une reponse.
     if (state.wordsSinceAnticipation >= ANTICIPATION_WORDS) anticipate();
+
+    // Quand c'est vous qui venez de parler, il n'y a rien a repondre :
+    // les suppositions, elles, restent utiles.
+    if (turn.speaker === 'you') return;
     if (!turn.question && state.wordsSinceAsk < 8) return;
     ask({ depth: 'flash' });
   }, delay);
@@ -392,15 +437,90 @@ async function anticipate() {
 
 setInterval(refreshAnticipationAge, 10000);
 
-/* ---------------- capture : micro (Web Speech API) ---------------- */
+/* ---------------- capture : deux canaux ---------------- */
 
+// VOUS = micro choisi dans le panneau audio, EUX = son du systeme.
+// Chacun a son flux, sa transcription et son vu-metre : plus besoin de
+// deviner qui parle.
+const channels = {
+  you: null,
+  them: null,
+};
+
+function makeChannel(id) {
+  return new AudioChannel({
+    id,
+    lang: () => el.lang.value,
+    onInterim: (text) => setInterim(id, text),
+    onFinal: (text) => {
+      setInterim(id, '');
+      addTurn(text, id);
+    },
+    onLevel: (level) => setLevel(id, level),
+    onError: (message) => {
+      el.meta.textContent = `${SPEAKERS[id].label} : ${message}`;
+    },
+    onEnded: () => stopChannel(id),
+  });
+}
+
+async function startChannel(id) {
+  if (channels[id]?.active) return;
+
+  if (!state.health?.sttAvailable) {
+    // Sans cle de transcription, seul le repli Web Speech API est possible,
+    // et il ne sait pas choisir d'appareil.
+    if (id === 'them') {
+      throw new Error(
+        'Le canal « Eux » demande DEEPGRAM_API_KEY dans assistant/.env. Sans elle, seul le micro par défaut fonctionne.',
+      );
+    }
+    startFallbackMic();
+    return;
+  }
+
+  const stream = id === 'you' ? await openMicStream(el.micDevice.value) : await openSystemStream();
+  const channel = makeChannel(id);
+  channels[id] = channel;
+
+  try {
+    await channel.start(stream);
+  } catch (error) {
+    channels[id] = null;
+    stream.getTracks().forEach((track) => track.stop());
+    throw error;
+  }
+
+  paintChannelState(id);
+  // Les libelles des micros n'arrivent qu'une fois l'autorisation accordee.
+  if (id === 'you') refreshDevices();
+}
+
+function stopChannel(id) {
+  channels[id]?.stop();
+  channels[id] = null;
+  if (id === 'you') stopFallbackMic();
+  setInterim(id, '');
+  setLevel(id, 0);
+  paintChannelState(id);
+}
+
+function anyChannelLive() {
+  return Boolean(channels.you?.active || channels.them?.active || recognition);
+}
+
+/* ---------------- repli sans cle : Web Speech API ---------------- */
+
+// Ne sait pas prendre un appareil precis ni un flux : il ecoute le micro par
+// defaut du systeme. C'est la raison pour laquelle le choix d'appareil est
+// grise dans ce mode.
 let recognition = null;
 
-function startMic() {
+function startFallbackMic() {
   const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!Recognition) {
     throw new Error(
-      'Reconnaissance vocale indisponible dans ce navigateur. Utilise Chrome ou Edge, ou la source « Onglet / écran ».',
+      'Reconnaissance vocale indisponible ici. Utilise Chrome ou Edge, ou renseigne DEEPGRAM_API_KEY pour le streaming.',
     );
   }
 
@@ -413,10 +533,12 @@ function startMic() {
     let interim = '';
     for (let i = event.resultIndex; i < event.results.length; i += 1) {
       const result = event.results[i];
-      if (result.isFinal) addTurn(result[0].transcript);
+      // Sans separation de canaux, on ne sait pas qui parle : tout arrive
+      // sur EUX, le cas le plus utile.
+      if (result.isFinal) addTurn(result[0].transcript, 'them');
       else interim += result[0].transcript;
     }
-    el.interim.textContent = interim;
+    setInterim('them', interim);
   };
 
   recognition.onerror = (event) => {
@@ -426,7 +548,7 @@ function startMic() {
 
   // Chrome coupe la session apres un silence prolonge : on relance.
   recognition.onend = () => {
-    if (state.live) {
+    if (state.live && recognition) {
       try {
         recognition.start();
       } catch {
@@ -438,117 +560,116 @@ function startMic() {
   recognition.start();
 }
 
-function stopMic() {
+function stopFallbackMic() {
   if (!recognition) return;
   recognition.onend = null;
   recognition.stop();
   recognition = null;
 }
 
-/* ---------------- capture : onglet / ecran (Deepgram) ---------------- */
+/* ---------------- panneau audio ---------------- */
 
-let capture = null; // { stream, recorder, loop }
-
-async function startSystem() {
-  if (!state.health?.sttAvailable) {
-    throw new Error(
-      'Source « Onglet / écran » inactive : renseigne DEEPGRAM_API_KEY dans assistant/.env, puis relance le serveur.',
-    );
+async function refreshDevices() {
+  let devices = [];
+  try {
+    devices = await listMicrophones();
+  } catch {
+    return;
   }
 
-  const stream = await navigator.mediaDevices.getDisplayMedia({
-    video: true,
-    audio: { echoCancellation: false, noiseSuppression: false },
-  });
-  const audio = stream.getAudioTracks();
-  if (!audio.length) {
-    stream.getTracks().forEach((t) => t.stop());
-    throw new Error(
-      'Aucune piste audio partagée. Dans la fenêtre de partage, choisis un onglet et coche « Partager l’audio de l’onglet ».',
+  // Au premier passage la liste est vide : on vise l'appareil memorise.
+  const previous = el.micDevice.value || state.wantedMic || 'default';
+  el.micDevice.textContent = '';
+  el.micDevice.append(
+    Object.assign(document.createElement('option'), {
+      value: 'default',
+      textContent: 'Micro par défaut',
+    }),
+  );
+  for (const device of devices) {
+    el.micDevice.append(
+      Object.assign(document.createElement('option'), {
+        value: device.deviceId,
+        textContent: device.label,
+      }),
     );
   }
-  stream.getVideoTracks().forEach((track) => track.stop());
-  // L'utilisateur peut couper le partage depuis la barre du navigateur.
-  audio[0].addEventListener('ended', () => stop());
-
-  const mime = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-    ? 'audio/webm;codecs=opus'
-    : 'audio/webm';
-
-  // Un MediaRecorder redemarre toutes les 4 s : chaque segment est un fichier
-  // webm complet, donc transcriptible seul (les chunks d'un flux unique, non).
-  const cycle = () => {
-    if (!state.live) return;
-    const recorder = new MediaRecorder(new MediaStream(audio), { mimeType: mime });
-    const parts = [];
-    recorder.ondataavailable = (event) => event.data.size && parts.push(event.data);
-    recorder.onstop = async () => {
-      if (parts.length) void send(new Blob(parts, { type: mime }));
-      cycle();
-    };
-    recorder.start();
-    capture.timer = setTimeout(() => recorder.state !== 'inactive' && recorder.stop(), 4000);
-    capture.recorder = recorder;
-  };
-
-  const send = async (blob) => {
-    try {
-      const response = await fetch(`/api/transcribe?lang=${el.lang.value}`, {
-        method: 'POST',
-        headers: { 'Content-Type': mime },
-        body: blob,
-      });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error || 'transcription refusée');
-      if (data.text) addTurn(data.text);
-    } catch (error) {
-      el.meta.textContent = error.message;
-    }
-  };
-
-  capture = { stream, recorder: null, timer: null };
-  cycle();
+  // On reste sur l'appareil choisi s'il est toujours la.
+  if ([...el.micDevice.options].some((option) => option.value === previous)) {
+    el.micDevice.value = previous;
+  }
+  el.deviceCount.textContent = `${devices.length} micro${devices.length > 1 ? 's' : ''}`;
 }
 
-function stopSystem() {
-  if (!capture) return;
-  clearTimeout(capture.timer);
-  const { recorder } = capture;
-  if (recorder && recorder.state !== 'inactive') {
-    recorder.onstop = null; // pas de relance de cycle
-    recorder.stop();
-  }
-  capture.stream.getTracks().forEach((track) => track.stop());
-  capture = null;
+function setLevel(id, level) {
+  // Racine pour etaler le bas de l'echelle, ou se joue la parole normale.
+  const meter = id === 'you' ? el.levelYou : el.levelThem;
+  meter.style.setProperty('--level', Math.min(1, Math.sqrt(level) * 1.6).toFixed(3));
+}
+
+function setInterim(id, text) {
+  state.interim[id] = text;
+  const parts = [];
+  if (state.interim.them) parts.push(`${SPEAKERS.them.label} : ${state.interim.them}`);
+  if (state.interim.you) parts.push(`${SPEAKERS.you.label} : ${state.interim.you}`);
+  el.interim.textContent = parts.join('   ·   ');
+}
+
+function paintChannelState(id) {
+  const on = id === 'you' ? Boolean(channels.you?.active || recognition) : Boolean(channels.them?.active);
+  const button = id === 'you' ? el.toggleYou : el.toggleThem;
+  button.setAttribute('aria-pressed', String(on));
+  button.textContent = on ? 'Couper' : 'Activer';
+  (id === 'you' ? el.rowYou : el.rowThem).classList.toggle('on', on);
+
+  // La Web Speech API ignore l'appareil demande : autant le dire.
+  el.micDevice.disabled = Boolean(recognition) || !state.health?.sttAvailable;
+  el.micHint.hidden = state.health?.sttAvailable !== false;
 }
 
 /* ---------------- cycle de vie ---------------- */
 
 async function start() {
-  try {
-    if (el.source.value === 'mic') startMic();
-    else await startSystem();
-  } catch (error) {
-    el.meta.textContent = error.message;
-    showError(error.message);
+  // Par defaut on ouvre les deux canaux ; celui qui echoue le signale sans
+  // empecher l'autre de tourner.
+  const wanted = [];
+  if (el.wantYou.checked) wanted.push('you');
+  if (el.wantThem.checked) wanted.push('them');
+
+  if (!wanted.length) {
+    showError('Active au moins un canal dans le panneau audio.');
     return;
   }
+
   state.live = true;
+  for (const id of wanted) {
+    try {
+      await startChannel(id);
+    } catch (error) {
+      showError(`${SPEAKERS[id].label} : ${error.message}`);
+    }
+  }
+
+  if (!anyChannelLive()) {
+    state.live = false;
+    return;
+  }
+
   document.body.classList.add('live');
   el.toggleLabel.textContent = 'En écoute';
-  el.source.disabled = true;
 }
 
 function stop() {
   state.live = false;
-  stopMic();
-  stopSystem();
+  stopChannel('you');
+  stopChannel('them');
   clearTimeout(state.silenceTimer);
   state.pending?.abort();
+  state.anticipating?.abort();
   document.body.classList.remove('live');
   el.toggleLabel.textContent = 'Écouter';
-  el.interim.textContent = '';
-  el.source.disabled = false;
+  setInterim('you', '');
+  setInterim('them', '');
 }
 
 function showError(message) {
@@ -560,10 +681,11 @@ function showError(message) {
 
 function emptyState() {
   el.answers.innerHTML =
-    '<p class="empty">Renseigne d’abord le <strong>Dossier</strong> (touche P) : ' +
-    'sans faits, le copilote reste générique. Puis « Écouter ». ' +
-    'Les suggestions arrivent seules à chaque question détectée ; ' +
-    '<kbd>Espace</kbd> pour en forcer une.</p>';
+    '<p class="empty">Renseigne le <strong>Dossier</strong> (<kbd>P</kbd>) : sans faits, ' +
+    'le copilote reste générique. Choisis tes entrées audio dans <strong>Son</strong> ' +
+    '(<kbd>S</kbd>) — <em>Eux</em> pour le son de la visio, <em>Vous</em> pour ton micro. ' +
+    'Puis « Écouter ». Les suggestions arrivent seules à chaque question de ' +
+    'l’interlocuteur ; <kbd>Espace</kbd> pour en forcer une.</p>';
 }
 
 /* ---------------- branchements ---------------- */
@@ -572,6 +694,59 @@ el.toggle.addEventListener('click', () => (state.live ? stop() : start()));
 el.ask.addEventListener('click', () => ask({ depth: 'flash' }));
 el.deep.addEventListener('click', () => ask({ depth: 'deep' }));
 el.anticipate.addEventListener('click', () => anticipate());
+
+function toggleAudioPanel(force) {
+  const open = force ?? el.audioPanel.hidden;
+  el.audioPanel.hidden = !open;
+  el.audioBtn.setAttribute('aria-expanded', String(open));
+  el.audioBtn.setAttribute('aria-pressed', String(open));
+  if (open) refreshDevices();
+}
+
+el.audioBtn.addEventListener('click', () => toggleAudioPanel());
+el.refreshDevicesBtn.addEventListener('click', refreshDevices);
+
+for (const [id, button] of [
+  ['you', el.toggleYou],
+  ['them', el.toggleThem],
+]) {
+  button.addEventListener('click', async () => {
+    const on = id === 'you' ? channels.you?.active || recognition : channels.them?.active;
+    if (on) {
+      stopChannel(id);
+      if (!anyChannelLive()) stop();
+      return;
+    }
+    try {
+      state.live = true;
+      await startChannel(id);
+      document.body.classList.add('live');
+      el.toggleLabel.textContent = 'En écoute';
+    } catch (error) {
+      showError(`${SPEAKERS[id].label} : ${error.message}`);
+      if (!anyChannelLive()) stop();
+    }
+  });
+}
+
+// Changer de micro en cours de route : on relance le canal sur le nouvel
+// appareil sans toucher a l'autre.
+el.micDevice.addEventListener('change', async () => {
+  savePrefs();
+  if (!channels.you?.active) return;
+  stopChannel('you');
+  try {
+    await startChannel('you');
+  } catch (error) {
+    showError(`Vous : ${error.message}`);
+  }
+});
+
+// Casque branché ou débranché pendant la réunion.
+onDeviceChange(() => {
+  refreshDevices();
+  if (!el.audioPanel.hidden) el.meta.textContent = 'appareils audio mis à jour';
+});
 el.compact.addEventListener('click', () => {
   setCompact(!document.body.classList.contains('compact'));
   savePrefs();
@@ -579,13 +754,28 @@ el.compact.addEventListener('click', () => {
 el.settingsBtn.addEventListener('click', () => el.settings.showModal());
 el.settings.addEventListener('close', savePrefs);
 
-for (const control of [el.mode, el.lang, el.source, el.auto, el.silence]) {
+for (const control of [el.mode, el.lang, el.auto, el.silence, el.wantYou, el.wantThem]) {
   control.addEventListener('change', savePrefs);
 }
-el.lang.addEventListener('change', () => {
-  if (state.live && recognition) {
-    stopMic();
-    startMic();
+// La langue est fixee a l'ouverture de chaque flux : on relance ceux qui
+// tournent pour qu'ils la prennent en compte.
+el.lang.addEventListener('change', async () => {
+  if (!state.live) return;
+  for (const id of ['you', 'them']) {
+    const wasOn = id === 'you' ? channels.you?.active || recognition : channels.them?.active;
+    if (!wasOn) continue;
+    stopChannel(id);
+    // Le canal « Eux » passe par un partage d'ecran : le relancer
+    // redemanderait une autorisation, on laisse l'utilisateur decider.
+    if (id === 'them') {
+      el.meta.textContent = 'langue changée — réactive « Eux » pour l’appliquer';
+      continue;
+    }
+    try {
+      await startChannel(id);
+    } catch (error) {
+      showError(`${SPEAKERS[id].label} : ${error.message}`);
+    }
   }
 });
 
@@ -600,6 +790,8 @@ document.addEventListener('keydown', (event) => {
     ask({ depth: 'deep' });
   } else if (event.key === 'a' || event.key === 'A') {
     anticipate();
+  } else if (event.key === 's' || event.key === 'S') {
+    toggleAudioPanel();
   } else if (event.key === 'c' || event.key === 'C') {
     setCompact(!document.body.classList.contains('compact'));
     savePrefs();
@@ -649,7 +841,17 @@ async function wireShell() {
 // Expose de quoi simuler une transcription, uniquement sur /?debug=1.
 // Sert aux tests navigateur ; inactif en usage normal.
 if (new URLSearchParams(location.search).has('debug')) {
-  window.__copilot = { addTurn, ask, anticipate, paintAnticipation, state };
+  window.__copilot = {
+    addTurn,
+    ask,
+    anticipate,
+    paintAnticipation,
+    transcriptWindow,
+    toggleAudioPanel,
+    setLevel,
+    setInterim,
+    state,
+  };
 }
 
 /* ---------------- demarrage ---------------- */
@@ -669,6 +871,9 @@ if (new URLSearchParams(location.search).has('debug')) {
 
   loadPrefs();
   emptyState();
+  await refreshDevices();
+  paintChannelState('you');
+  paintChannelState('them');
 
   if (state.health && !state.health.hasApiKey) {
     showError('Aucune clé Anthropic détectée : copie assistant/.env.example vers assistant/.env, renseigne ANTHROPIC_API_KEY, puis relance le serveur.');

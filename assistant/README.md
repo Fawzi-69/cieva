@@ -6,18 +6,16 @@ machine, et au choix une page de navigateur ou une fenêtre flottante exclue du
 partage d'écran. Rien n'est hébergé, rien n'est enregistré sur disque.
 
 ```
-interlocuteur ──▶ micro / audio du système
-                        │
-                        ▼
-                  transcription          Web Speech API (navigateur, sans clé)
-                        │                ou Deepgram (son d'un onglet / écran)
-                        ▼
-                  fenêtre des dernières minutes
-                        │
-          ┌─────────────┴─────────────┐
-          ▼                           ▼
-   réponses (à la question)    suppositions (ce qui vient)
-   Claude Opus 5, effort bas   en fond, rythme plus lent
+  EUX  son du système ─┐                    ┌─▶ EUX : Votre solution coûte combien ?
+                       ├─▶ transcription ───┤
+ VOUS  micro choisi ───┘   streaming, 16 kHz └─▶ VOUS : Deux semaines sur base éprouvée.
+                                │
+                        fenêtre des dernières minutes, étiquetée
+                                │
+                  ┌─────────────┴─────────────┐
+                  ▼                           ▼
+           réponses (à EUX)          suppositions (ce qui vient)
+           Claude Opus 5             en fond, rythme plus lent
 ```
 
 ## Démarrer
@@ -111,17 +109,47 @@ toujours à effort bas, même quand les réponses sont en mode détaillé, et un
 supposition qui échoue laisse la précédente en place plutôt que de vider
 l'écran.
 
-## Les deux sources audio
+## Les deux voix
 
-| Source | Ce qu'elle capte | Prérequis |
+Touche `S`, ou le bouton **Son** : le panneau audio se déplie.
+
+| Canal | Ce qu'il capte | Réglage |
 |---|---|---|
-| **Micro** | ce que le micro entend : votre interlocuteur en face de vous, ou la visio si vos haut-parleurs sont ouverts | rien — Web Speech API de Chrome/Edge |
-| **Onglet / écran** | le son d'un onglet (Meet, Teams, Zoom web) même au casque | `DEEPGRAM_API_KEY` dans `.env` |
+| **Eux** | le son du système ou de l'onglet partagé — la visio, même au casque | partage d'écran, à autoriser une fois |
+| **Vous** | votre micro, **celui que vous choisissez** dans la liste | sélecteur d'appareil |
 
-Pour la seconde, le navigateur demande quoi partager : choisissez un **onglet**
-et cochez **« Partager l'audio de l'onglet »**. Sans piste audio, le copilote
-vous le dit au lieu d'écouter dans le vide. L'audio part par segments de 4 s
-chez Deepgram, revient en texte, et n'est pas conservé.
+Chaque canal a son propre flux, sa propre transcription et son vu-mètre. Le
+modèle reçoit une transcription étiquetée :
+
+```
+EUX : Votre solution coûte combien exactement ?
+VOUS : Deux semaines, sur une base déjà éprouvée.
+EUX : Et la reprise des données ?
+```
+
+Ce que ça change concrètement : le copilote **ne répond plus à vous-même**, il
+ne vous fait pas répéter ce que vous venez de dire, et si l'interlocuteur
+revient sur un point déjà traité il change d'angle au lieu de resservir la
+même phrase. À l'écran, ce que vous avez dit s'efface en gris : l'œil va à
+l'autre voix.
+
+Pour le canal **Eux**, le navigateur demande quoi partager : choisissez un
+**onglet** et cochez **« Partager l'audio de l'onglet »**. Sans piste audio, le
+copilote vous le dit au lieu d'écouter dans le vide. (Dans la fenêtre
+flottante, Electron fournit directement le son du système, sans sélecteur.)
+
+### Brancher un appareil en cours de route
+
+Le panneau écoute l'événement `devicechange` : casque branché ou débranché, la
+liste se met à jour toute seule et la barre le signale. Le bouton **Rechercher
+les appareils** force un rafraîchissement. Changer de micro pendant que le
+canal tourne le relance sur le nouvel appareil sans toucher au canal **Eux**.
+
+Deux limites à connaître : les libellés des micros restent anonymes tant que
+l'autorisation micro n'a pas été accordée une première fois, et changer la
+**langue** en cours de route relance le canal Vous automatiquement, mais
+demande de réactiver Eux à la main — le relancer redemanderait l'autorisation
+de partage.
 
 ## Les trois contextes
 
@@ -182,7 +210,8 @@ globaux listés plus haut, qui marchent sans focus.)
 | `ANTHROPIC_API_KEY` | — | obligatoire pour les suggestions |
 | `COPILOT_MODEL` | `claude-opus-5` | modèle |
 | `COPILOT_FAST` | `0` | `1` = mode rapide Opus 5, ~2,5× plus de tokens/s, tarif premium |
-| `DEEPGRAM_API_KEY` | — | active la source « onglet / écran » |
+| `DEEPGRAM_API_KEY` | — | active les deux canaux et le choix d'appareil |
+| `DEEPGRAM_URL` | api.deepgram.com | pour viser un Deepgram auto-hébergé, ou tout service parlant le même protocole |
 | `PORT` / `HOST` | `4321` / `127.0.0.1` | `127.0.0.1` = accessible depuis cette machine seulement |
 
 Le serveur garde la clé API de son côté : la page du navigateur ne la voit
@@ -218,31 +247,48 @@ l'*agency work*.
 
 Aucun n'a de lane « suppositions » : ils répondent, ils n'anticipent pas.
 
-Pistes repérées et non retenues pour l'instant, sur la transcription :
-[RealtimeSTT](https://github.com/KoljaB/RealtimeSTT) (MIT, 10,1k ★, serveur
-WebSocket local, multi-moteurs) et [Kyutai
-STT](https://huggingface.co/kyutai/stt-1b-en_fr) (CC-BY-4.0, streaming
-français + anglais, 0,5 s de latence, VAD sémantique). À noter : **Moonshine,
-le plus rapide en navigateur, n'a pas de modèle français** — seulement en,
-es, ja, ar, uk, ko, zh, vi.
+### Pourquoi Deepgram plutôt qu'un moteur local
+
+Parce que le panneau audio l'impose : dès qu'on veut **choisir** un micro, la
+Web Speech API est hors jeu — elle ne sait prendre ni un appareil ni un flux,
+elle écoute le micro par défaut du système. Il fallait donc capturer nous-mêmes
+et envoyer le PCM quelque part. Deepgram est le chemin le plus court : bon en
+français, partiels au fil de l'eau, une connexion par canal, rien à installer.
+Elle reste le repli sans clé, pour le seul canal **Eux**.
+
+Rester local est possible et le code y est prêt — `DEEPGRAM_URL` pointe où vous
+voulez. Deux pistes, par ordre de facilité :
+
+- **[RealtimeSTT](https://github.com/KoljaB/RealtimeSTT)** (MIT, 10,1k ★) —
+  serveur Python avec endpoint WebSocket, plusieurs moteurs au choix
+  (faster-whisper, Parakeet, sherpa-onnx). Son protocole diffère du nôtre : il
+  faudrait un petit adaptateur dans `lib/transcriber.mjs`.
+- **[Kyutai STT](https://huggingface.co/kyutai/stt-1b-en_fr)** (CC-BY-4.0) —
+  streaming français + anglais, 0,5 s de latence, VAD sémantique. Le meilleur
+  choix en français si vous acceptez de faire tourner un modèle.
+
+À noter, pour éviter une fausse piste : **Moonshine, le plus rapide en
+navigateur, n'a pas de modèle français** — seulement en, es, ja, ar, uk, ko,
+zh, vi.
 
 ## Tests
 
 ```bash
 npm run check   # syntaxe de tous les modules
-npm test        # parsing des deux formats + détection de question
+npm test        # 19 tests : formats, étiquetage par locuteur, et la chaîne
+                # de transcription complète contre un faux service
 ```
 
 ## Limites connues
 
-- **Chrome/Edge uniquement** pour la source micro : Firefox et Safari n'ont pas
-  la Web Speech API. La source « onglet / écran » ne dépend pas du navigateur.
-- La reconnaissance micro de Chrome coupe d'elle-même après un long silence ;
-  le copilote la relance, avec une perte de quelques centaines de millisecondes.
-- Les segments de 4 s de la source « onglet » introduisent une micro-coupure
-  entre deux segments : un mot à cheval sur la frontière peut manquer.
+- **Sans `DEEPGRAM_API_KEY`**, on retombe sur la Web Speech API : Chrome/Edge
+  seulement, un seul canal, micro par défaut du système, pas de choix
+  d'appareil. Le panneau audio l'affiche en clair.
+- Si vos haut-parleurs sont ouverts (pas de casque), le canal **Vous** capte
+  aussi la voix de l'interlocuteur : elle sera comptée comme la vôtre.
+  L'annulation d'écho du micro limite les dégâts sans les supprimer. Au casque,
+  la séparation est nette.
 - L'exclusion de capture n'existe **pas sous Linux**, et le rectangle noir de
   Windows antérieur à la build 2004 est plus voyant que la fenêtre elle-même.
-- Le micro capte aussi **votre** voix : elle entre dans la transcription au
-  même titre que celle de l'interlocuteur. Séparer les deux canaux (mic =
-  vous, son système = eux) reste à faire.
+- Un long silence peut faire fermer le flux par le service ; le copilote le
+  signale dans la barre plutôt que d'écouter dans le vide.

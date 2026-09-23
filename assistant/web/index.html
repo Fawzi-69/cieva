@@ -27,13 +27,9 @@
         </select>
       </label>
 
-      <label class="field">
-        <span>Source</span>
-        <select id="source">
-          <option value="mic">Micro</option>
-          <option value="system">Onglet / écran</option>
-        </select>
-      </label>
+      <button id="audioBtn" class="ghost" type="button" aria-expanded="false" title="S">
+        Son
+      </button>
 
       <label class="switch">
         <input id="auto" type="checkbox" checked />
@@ -49,6 +45,38 @@
       <button id="compact" class="ghost" type="button" title="C">Compact</button>
       <button id="settingsBtn" class="ghost" type="button" title="P">Dossier</button>
     </header>
+
+    <section id="audioPanel" class="audio" hidden>
+      <div class="audio-row" id="rowThem">
+        <label class="switch">
+          <input id="wantThem" type="checkbox" checked />
+          <span class="who them">Eux</span>
+        </label>
+        <span class="src">son du système / onglet partagé</span>
+        <div class="meter" id="levelThem"><i></i></div>
+        <button id="toggleThem" class="ghost" type="button" aria-pressed="false">Activer</button>
+      </div>
+
+      <div class="audio-row" id="rowYou">
+        <label class="switch">
+          <input id="wantYou" type="checkbox" />
+          <span class="who you">Vous</span>
+        </label>
+        <select id="micDevice" class="src"></select>
+        <div class="meter" id="levelYou"><i></i></div>
+        <button id="toggleYou" class="ghost" type="button" aria-pressed="false">Activer</button>
+      </div>
+
+      <footer class="audio-foot">
+        <span id="deviceCount" class="meta"></span>
+        <button id="refreshDevices" class="ghost" type="button">Rechercher les appareils</button>
+        <p id="micHint" class="hintline" hidden>
+          Sans <code>DEEPGRAM_API_KEY</code>, la transcription passe par le navigateur :
+          il écoute le micro <strong>par défaut du système</strong> et ignore le choix
+          ci-dessus.
+        </p>
+      </footer>
+    </section>
 
     <main class="panes">
       <section class="pane transcript" id="transcriptPane">
@@ -76,7 +104,8 @@
 
     <footer class="hint" id="hint">
       <kbd>Espace</kbd> répondre · <kbd>D</kbd> détailler · <kbd>A</kbd> supposer ·
-      <kbd>C</kbd> compact · <kbd>P</kbd> dossier · <kbd>Échap</kbd> stopper
+      <kbd>S</kbd> son · <kbd>C</kbd> compact · <kbd>P</kbd> dossier ·
+      <kbd>Échap</kbd> stopper
     </footer>
 
     <dialog id="settings">
