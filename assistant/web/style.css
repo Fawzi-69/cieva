@@ -516,8 +516,11 @@ body.compact .hint {
   display: none;
 }
 
-body.compact .field,
-body.compact .switch {
+/* Seulement dans la barre : les reglages et le panneau audio gardent leurs
+   interrupteurs, sinon le mode rapide et le choix des canaux disparaissent
+   dans l'app (toujours en compact). */
+body.compact .bar .field,
+body.compact .bar .switch {
   display: none;
 }
 
@@ -565,6 +568,33 @@ body.overlay #deep,
 body.overlay #anticipate,
 body.overlay #compact {
   display: none;
+}
+
+/* Le texte d'etat cede sa place aux boutons : il se tronque plutot que de
+   pousser Dossier et Reglages hors de la fenetre. */
+body.overlay .bar {
+  gap: 6px;
+}
+
+body.overlay .bar .ghost {
+  padding: 6px 9px;
+}
+
+body.overlay .bar .ghost.icon {
+  padding: 4px 8px;
+  font-size: 15px;
+  line-height: 1;
+}
+
+body.overlay .bar .grow {
+  display: none;
+}
+
+body.overlay .bar .meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 /* Mode traversant : la souris passe a travers, on le signale. */
@@ -639,6 +669,50 @@ textarea {
   margin-top: 12px;
 }
 
+.keyfield {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.keyfield span {
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.keyfield em {
+  margin-left: 6px;
+  color: var(--meta);
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.keyfield input {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--ink-2);
+  font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.keyfield small {
+  color: var(--meta);
+  font-size: 12px;
+}
+
+.keyfield small a {
+  color: var(--kicker);
+}
+
+#anthropicNow,
+#deepgramNow {
+  color: #8ff0e2;
+}
+
 .primary {
   padding: 8px 18px;
   border: 0;
@@ -657,8 +731,10 @@ textarea {
   .hint {
     display: none;
   }
-  .field span,
-  .switch span {
+  /* Dans la barre seulement : ailleurs, ces libelles portent l'information
+     (« Eux » / « Vous », mode rapide). */
+  .bar .field span,
+  .bar .switch span {
     display: none;
   }
 }

@@ -137,6 +137,32 @@ test('ouvre un flux distinct par canal, et le libere a la fermeture', async () =
   assert.ok(await waitForStreams(0), 'les flux amont ne sont pas liberes');
 });
 
+test('refuse une WebSocket ouverte depuis un autre site', async () => {
+  const socket = new WebSocket(`ws://127.0.0.1:${APP_PORT}/ws/audio`, {
+    headers: { Origin: 'https://site-quelconque.example' },
+  });
+  await assert.rejects(once(socket, 'open'), 'la connexion aurait dû être refusée');
+});
+
+test('accepte une WebSocket ouverte depuis la page du copilote', async () => {
+  const socket = new WebSocket(`ws://127.0.0.1:${APP_PORT}/ws/audio`, {
+    headers: { Origin: `http://127.0.0.1:${APP_PORT}` },
+  });
+  await once(socket, 'open');
+  socket.close();
+});
+
+test('refuse une suggestion demandée depuis un autre site', async () => {
+  // Un POST text/plain part sans preflight CORS : c'est exactement ce qu'un
+  // site malveillant enverrait pour consommer les crédits de l'utilisateur.
+  const response = await fetch(`http://127.0.0.1:${APP_PORT}/api/suggest`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain', Origin: 'https://site-quelconque.example' },
+    body: JSON.stringify({ transcript: 'EUX : bonjour' }),
+  });
+  assert.equal(response.status, 403);
+});
+
 test('la langue anglaise est transmise au service', async () => {
   const socket = new WebSocket(`ws://127.0.0.1:${APP_PORT}/ws/audio`);
   await once(socket, 'open');

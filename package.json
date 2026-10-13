@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "assistant": "npm --prefix assistant start",
-    "copilote": "npm --prefix assistant/desktop start"
+    "copilote": "npm --prefix assistant run desktop"
   },
   "dependencies": {
     "@react-three/drei": "^10.7.7",

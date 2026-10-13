@@ -1,18 +1,28 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { buildSystem, buildUserMessage } from './prompts.mjs';
 
-const MODEL = process.env.COPILOT_MODEL || 'claude-opus-5';
-const FAST = process.env.COPILOT_FAST === '1';
+// Lus a chaque appel, pas au chargement : dans l'app installee, les reglages
+// changent process.env a chaud et doivent prendre effet sans redemarrage.
+const currentModel = () => process.env.COPILOT_MODEL || 'claude-opus-5';
+const fastMode = () => process.env.COPILOT_FAST === '1';
 
-// Un seul client pour tout le process : il resout la cle depuis
-// ANTHROPIC_API_KEY, ANTHROPIC_AUTH_TOKEN ou un profil `ant auth login`.
+// Un client par cle : il resout la cle depuis ANTHROPIC_API_KEY,
+// ANTHROPIC_AUTH_TOKEN ou un profil `ant auth login`, et on le recree quand
+// la cle change.
 let client;
+let clientKey;
 function getClient() {
-  if (!client) client = new Anthropic({ maxRetries: 1 });
+  const key = process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN || '';
+  if (!client || key !== clientKey) {
+    client = new Anthropic({ maxRetries: 1 });
+    clientKey = key;
+  }
   return client;
 }
 
-export const modelInfo = { model: MODEL, fast: FAST };
+export function modelInfo() {
+  return { model: currentModel(), fast: fastMode() };
+}
 
 /**
  * Lance une suggestion en streaming.
@@ -24,15 +34,16 @@ export async function suggest(
   { mode, lang, profile, transcript, question, depth = 'flash', kind = 'answer' },
   { onDelta, signal } = {},
 ) {
+  const fast = fastMode();
   const betas = ['server-side-fallback-2026-07-01'];
-  if (FAST) betas.push('fast-mode-2026-02-01');
+  if (fast) betas.push('fast-mode-2026-02-01');
 
   // Les suppositions tournent en fond : toujours courtes, toujours a effort
   // bas, quel que soit le reglage de profondeur des reponses.
   const deep = kind === 'answer' && depth === 'deep';
 
   const params = {
-    model: MODEL,
+    model: currentModel(),
     // Sortie volontairement courte : le format tient en quelques lignes.
     max_tokens: deep ? 6000 : 1200,
     // `low` pour la latence en direct, `high` quand on demande le detail.
@@ -46,7 +57,7 @@ export async function suggest(
       { role: 'user', content: buildUserMessage({ transcript, question, depth, kind }) },
     ],
   };
-  if (FAST) params.speed = 'fast';
+  if (fast) params.speed = 'fast';
 
   const stream = getClient().beta.messages.stream(params, signal ? { signal } : undefined);
 

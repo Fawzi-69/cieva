@@ -39,6 +39,15 @@ const el = {
   rowThem: $('rowThem'),
   levelYou: $('levelYou'),
   levelThem: $('levelThem'),
+  keysBtn: $('keysBtn'),
+  keys: $('keys'),
+  anthropicKey: $('anthropicKey'),
+  deepgramKey: $('deepgramKey'),
+  anthropicNow: $('anthropicNow'),
+  deepgramNow: $('deepgramNow'),
+  fastMode: $('fastMode'),
+  keysStorage: $('keysStorage'),
+  keysStatus: $('keysStatus'),
   settingsBtn: $('settingsBtn'),
   settings: $('settings'),
   profile: $('profile'),
@@ -672,9 +681,10 @@ function stop() {
   setInterim('them', '');
 }
 
-function showError(message) {
+function showError(message, kind = '') {
   const card = document.createElement('article');
-  card.className = 'card error';
+  // `config` : erreur de reglage, retiree des que les cles sont enregistrees.
+  card.className = `card error ${kind}`.trim();
   card.textContent = message;
   el.answers.prepend(card);
 }
@@ -814,26 +824,87 @@ async function wireShell() {
   document.body.classList.add('overlay');
   setCompact(true);
 
-  // Les raccourcis globaux du processus principal arrivent ici : ils
+  const badge = document.createElement('span');
+  el.meta.after(badge);
+  const paintBadge = (info) => {
+    badge.className = `shield ${info.protection ? 'on' : 'off'}`;
+    badge.textContent = info.protection ? 'Hors capture' : 'Capturable';
+    badge.title = info.protection
+      ? 'La fenêtre est exclue du partage d’écran et des captures.'
+      : info.platform === 'linux'
+        ? 'Linux : aucune exclusion de capture n’existe, la fenêtre reste visible.'
+        : 'Protection désactivée : la fenêtre apparaît dans les partages d’écran.';
+  };
+  paintBadge(state.shell);
+
+  // Les raccourcis globaux et la barre de menus arrivent ici : ils
   // fonctionnent alors que le focus est resté dans la visio.
   shell.onCommand(({ command, payload }) => {
     if (command === 'ask') ask({ depth: 'flash' });
     else if (command === 'deep') ask({ depth: 'deep' });
     else if (command === 'anticipate') anticipate();
+    else if (command === 'settings') openKeys();
+    else if (command === 'protection') paintBadge(payload);
     else if (command === 'clickthrough') {
       document.body.classList.toggle('through', Boolean(payload));
     }
   });
 
-  const badge = document.createElement('span');
-  badge.className = `shield ${state.shell.protection ? 'on' : 'off'}`;
-  badge.textContent = state.shell.protection ? 'Hors capture' : 'Capturable';
-  badge.title = state.shell.protection
-    ? 'La fenêtre est exclue du partage d’écran et des captures.'
-    : state.shell.protectionRequested
-      ? 'Linux : aucune exclusion de capture n’existe, la fenêtre reste visible.'
-      : 'Protection désactivée via COPILOT_NO_PROTECT=1.';
-  el.meta.after(badge);
+  el.keysBtn.hidden = false;
+  el.keysBtn.addEventListener('click', openKeys);
+  el.keys.addEventListener('close', () => {
+    if (el.keys.returnValue === 'save') saveKeys();
+  });
+
+  // Premier lancement : sans cle Anthropic, rien ne peut marcher. On ouvre
+  // les reglages d'emblee plutot que d'afficher une erreur.
+  const current = await shell.getSettings();
+  if (!current.anthropicKey && !state.health?.hasApiKey) openKeys(current);
+}
+
+/* ---------------- reglages (app installee) ---------------- */
+
+async function openKeys(known) {
+  const shell = window.copilotShell;
+  const current = known ?? (await shell.getSettings());
+
+  el.anthropicKey.value = '';
+  el.deepgramKey.value = '';
+  el.anthropicKey.placeholder = current.anthropicKey ? 'inchangée' : 'sk-ant-…';
+  el.deepgramKey.placeholder = current.deepgramKey ? 'inchangée' : 'facultative';
+  el.anthropicNow.textContent = current.anthropicKey ? `Enregistrée : ${current.anthropicKey}` : '';
+  el.deepgramNow.textContent = current.deepgramKey ? `Enregistrée : ${current.deepgramKey}` : '';
+  el.fastMode.checked = current.fast;
+  el.keysStorage.textContent = current.encrypted
+    ? 'Elles sont chiffrées par le trousseau du système.'
+    : 'Aucun trousseau système disponible : elles sont stockées en clair dans le dossier de l’app.';
+  el.keysStatus.textContent = '';
+
+  if (!el.keys.open) el.keys.showModal();
+  el.anthropicKey.focus();
+}
+
+async function saveKeys() {
+  // Champ laisse vide = cle inchangee. Pour effacer une cle, on la remplace.
+  const patch = { fast: el.fastMode.checked };
+  if (el.anthropicKey.value.trim()) patch.anthropicKey = el.anthropicKey.value;
+  if (el.deepgramKey.value.trim()) patch.deepgramKey = el.deepgramKey.value;
+
+  await window.copilotShell.saveSettings(patch);
+  el.anthropicKey.value = '';
+  el.deepgramKey.value = '';
+
+  // Le serveur relit ses cles a chaque appel : il suffit de rafraichir ce
+  // que la page en sait.
+  try {
+    state.health = await (await fetch('/api/health')).json();
+  } catch {
+    /* le serveur repond toujours, il tourne dans l'app */
+  }
+  el.answers.querySelectorAll('.card.error.config').forEach((card) => card.remove());
+  paintChannelState('you');
+  paintChannelState('them');
+  el.meta.textContent = `${state.health.model}${state.health.fast ? ' · rapide' : ''} · réglages enregistrés`;
 }
 
 /* ---------------- crochet de test ---------------- */
@@ -875,8 +946,13 @@ if (new URLSearchParams(location.search).has('debug')) {
   paintChannelState('you');
   paintChannelState('them');
 
-  if (state.health && !state.health.hasApiKey) {
-    showError('Aucune clé Anthropic détectée : copie assistant/.env.example vers assistant/.env, renseigne ANTHROPIC_API_KEY, puis relance le serveur.');
+  // Dans l'app installee, l'absence de cle ouvre directement les reglages
+  // (voir wireShell) : le message sur le .env ne concerne que le navigateur.
+  if (state.health && !state.health.hasApiKey && !window.copilotShell) {
+    showError(
+      'Aucune clé Anthropic détectée : copie assistant/.env.example vers assistant/.env, renseigne ANTHROPIC_API_KEY, puis relance le serveur.',
+      'config',
+    );
   }
   el.meta.textContent = state.health
     ? `${state.health.model}${state.health.fast ? ' · rapide' : ''}`

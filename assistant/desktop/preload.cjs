@@ -10,6 +10,11 @@ contextBridge.exposeInMainWorld('copilotShell', {
   hide: () => ipcRenderer.invoke('copilot:hide'),
   quit: () => ipcRenderer.invoke('copilot:quit'),
 
+  /** { anthropicKey: '••••1234' | null, deepgramKey, fast, encrypted } */
+  getSettings: () => ipcRenderer.invoke('copilot:settings-get'),
+  /** Champs absents conserves, chaine vide = effacer. Renvoie la vue masquee. */
+  saveSettings: (patch) => ipcRenderer.invoke('copilot:settings-set', patch),
+
   /** Raccourcis globaux relayes par le processus principal. */
   onCommand: (handler) => {
     const listener = (_event, message) => handler(message);

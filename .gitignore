@@ -1,7 +1,7 @@
 # dependencies
 /node_modules
 assistant/node_modules
-assistant/desktop/node_modules
+assistant/dist
 /.pnp
 .pnp.js
 

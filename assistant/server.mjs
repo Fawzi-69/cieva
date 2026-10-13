@@ -1,14 +1,15 @@
 import http from 'node:http';
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
-// Charge assistant/.env avant tout import qui lit process.env.
+// Charge assistant/.env s'il existe (lancement depuis le depot). Dans l'app
+// installee il n'y en a pas : les cles viennent de l'ecran de reglages.
 const here = path.dirname(fileURLToPath(import.meta.url));
 try {
   process.loadEnvFile(path.join(here, '.env'));
 } catch {
-  // Pas de .env : on se rabat sur l'environnement du shell.
+  // Pas de .env : on se rabat sur l'environnement deja en place.
 }
 
 const { suggest, describeError, modelInfo } = await import('./lib/claude.mjs');
@@ -16,8 +17,6 @@ const { LiveTranscriber, sttAvailable, SAMPLE_RATE } = await import('./lib/trans
 const { MODE_LABELS } = await import('./lib/prompts.mjs');
 const { WebSocketServer } = await import('ws');
 
-const PORT = Number(process.env.PORT || 4321);
-const HOST = process.env.HOST || '127.0.0.1';
 const WEB_ROOT = path.join(here, 'web');
 const MAX_BODY = 8 * 1024 * 1024; // un segment audio de quelques secondes
 
@@ -152,34 +151,28 @@ async function handleSuggest(req, res) {
   }
 }
 
-const server = http.createServer((req, res) => {
-  const route = req.url.split('?')[0];
+/* ---------------- origine des requetes ---------------- */
 
-  if (req.method === 'GET' && route === '/api/health') {
-    return json(res, 200, {
-      ok: true,
-      model: modelInfo.model,
-      fast: modelInfo.fast,
-      sttAvailable,
-      sampleRate: SAMPLE_RATE,
-      hasApiKey: Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN),
-      modes: MODE_LABELS,
-    });
-  }
-  if (req.method === 'POST' && route === '/api/suggest') return handleSuggest(req, res);
-  if (req.method === 'GET') return serveStatic(req, res);
-
-  json(res, 405, { error: 'Methode non autorisee' });
-});
+// Le serveur n'ecoute que sur la boucle locale, mais n'importe quelle page
+// ouverte dans le navigateur peut viser 127.0.0.1 : un POST en text/plain
+// part sans preflight CORS, et une WebSocket n'est pas soumise a CORS du
+// tout. Sans ce controle, un site quelconque pourrait consommer les credits
+// Anthropic et Deepgram de l'utilisateur.
+//
+// Les clients hors navigateur (tests, curl) n'envoient pas d'Origin : ils
+// passent. Les navigateurs en envoient toujours un : il doit etre le notre.
+function sameOrigin(req, port) {
+  const origin = req.headers.origin;
+  if (!origin) return true;
+  return origin === `http://127.0.0.1:${port}` || origin === `http://localhost:${port}`;
+}
 
 /* ---------------- audio en streaming, un canal par locuteur ---------------- */
 
 // Le navigateur ouvre une connexion par canal ("you" / "them"), annonce la
 // langue, puis pousse du PCM 16 bits / 16 kHz. On relaie vers Deepgram et on
 // renvoie les resultats partiels puis definitifs sur la meme connexion.
-const audioSockets = new WebSocketServer({ noServer: true });
-
-audioSockets.on('connection', (socket) => {
+function handleAudioSocket(socket) {
   let live = null;
 
   const reply = (payload) => {
@@ -222,22 +215,83 @@ audioSockets.on('connection', (socket) => {
     live?.close();
     live = null;
   });
-});
+}
 
-server.on('upgrade', (req, socket, head) => {
-  if (req.url.split('?')[0] !== '/ws/audio') {
-    socket.destroy();
-    return;
-  }
-  audioSockets.handleUpgrade(req, socket, head, (ws) => audioSockets.emit('connection', ws, req));
-});
+/* ---------------- demarrage ---------------- */
 
-server.listen(PORT, HOST, () => {
+/**
+ * Demarre le serveur. `port: 0` laisse le systeme choisir un port libre :
+ * c'est ce que fait l'app installee, pour ne jamais entrer en conflit avec
+ * un autre logiciel.
+ * @returns {Promise<{ port: number, close: () => Promise<void> }>}
+ */
+export function startServer({ port = 4321, host = '127.0.0.1' } = {}) {
+  let actualPort = port;
+
+  const server = http.createServer((req, res) => {
+    const route = req.url.split('?')[0];
+
+    if (req.method === 'GET' && route === '/api/health') {
+      const info = modelInfo();
+      return json(res, 200, {
+        ok: true,
+        model: info.model,
+        fast: info.fast,
+        sttAvailable: sttAvailable(),
+        sampleRate: SAMPLE_RATE,
+        hasApiKey: Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN),
+        modes: MODE_LABELS,
+      });
+    }
+    if (req.method === 'POST' && route === '/api/suggest') {
+      if (!sameOrigin(req, actualPort)) return json(res, 403, { error: 'Origine refusee' });
+      return handleSuggest(req, res);
+    }
+    if (req.method === 'GET') return serveStatic(req, res);
+
+    json(res, 405, { error: 'Methode non autorisee' });
+  });
+
+  const audioSockets = new WebSocketServer({ noServer: true });
+  audioSockets.on('connection', handleAudioSocket);
+
+  server.on('upgrade', (req, socket, head) => {
+    if (req.url.split('?')[0] !== '/ws/audio' || !sameOrigin(req, actualPort)) {
+      socket.destroy();
+      return;
+    }
+    audioSockets.handleUpgrade(req, socket, head, (ws) => audioSockets.emit('connection', ws, req));
+  });
+
+  return new Promise((resolve, reject) => {
+    server.once('error', reject);
+    server.listen(port, host, () => {
+      actualPort = server.address().port;
+      resolve({
+        port: actualPort,
+        close: () =>
+          new Promise((done) => {
+            for (const client of audioSockets.clients) client.terminate();
+            server.close(() => done());
+          }),
+      });
+    });
+  });
+}
+
+/* ---------------- lancement direct : `node server.mjs` ---------------- */
+
+const runDirectly = process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href;
+
+if (runDirectly) {
+  const host = process.env.HOST || '127.0.0.1';
+  const { port } = await startServer({ port: Number(process.env.PORT || 4321), host });
+  const info = modelInfo();
   const key = process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN;
-  console.log(`\n  Copilote pret        http://${HOST}:${PORT}`);
-  console.log(`  Modele               ${modelInfo.model}${modelInfo.fast ? ' (mode rapide)' : ''}`);
+  console.log(`\n  Copilote pret        http://${host}:${port}`);
+  console.log(`  Modele               ${info.model}${info.fast ? ' (mode rapide)' : ''}`);
   console.log(`  Cle Anthropic        ${key ? 'detectee' : 'ABSENTE -> voir assistant/.env'}`);
   console.log(
-    `  Transcription        ${sttAvailable ? 'streaming Deepgram, 2 canaux' : 'repli Web Speech API (micro seul, sans choix d\'appareil)'}\n`,
+    `  Transcription        ${sttAvailable() ? 'streaming Deepgram, 2 canaux' : 'repli Web Speech API (micro seul, sans choix d\'appareil)'}\n`,
   );
-});
+}

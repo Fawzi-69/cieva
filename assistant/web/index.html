@@ -44,6 +44,16 @@
       <button id="anticipate" class="ghost" type="button" title="A">Supposer</button>
       <button id="compact" class="ghost" type="button" title="C">Compact</button>
       <button id="settingsBtn" class="ghost" type="button" title="P">Dossier</button>
+      <button
+        id="keysBtn"
+        class="ghost icon"
+        type="button"
+        title="Réglages : clés API et options"
+        aria-label="Réglages"
+        hidden
+      >
+        ⚙
+      </button>
     </header>
 
     <section id="audioPanel" class="audio" hidden>
@@ -135,6 +145,47 @@ Mon rôle : ..."
               <option value="1800">1,8 s de silence</option>
             </select>
           </label>
+          <button class="primary" value="save">Enregistrer</button>
+        </div>
+      </form>
+    </dialog>
+
+    <dialog id="keys">
+      <form method="dialog" id="keysForm">
+        <h2>Réglages</h2>
+        <p>
+          Les clés restent sur cette machine.
+          <span id="keysStorage"></span>
+        </p>
+
+        <label class="keyfield">
+          <span>Clé Anthropic <em>obligatoire</em></span>
+          <input id="anthropicKey" type="password" autocomplete="off" spellcheck="false" />
+          <small id="anthropicNow"></small>
+          <small>
+            À créer sur
+            <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>.
+          </small>
+        </label>
+
+        <label class="keyfield">
+          <span>Clé Deepgram <em>recommandée</em></span>
+          <input id="deepgramKey" type="password" autocomplete="off" spellcheck="false" />
+          <small id="deepgramNow"></small>
+          <small>
+            Sépare les deux voix et permet de choisir le micro. Sans elle, un seul canal, micro par
+            défaut. À créer sur
+            <a href="https://console.deepgram.com" target="_blank" rel="noopener">console.deepgram.com</a>.
+          </small>
+        </label>
+
+        <label class="switch">
+          <input id="fastMode" type="checkbox" />
+          <span>Mode rapide — réponses ~2,5× plus vite, coût plus élevé</span>
+        </label>
+
+        <div class="row">
+          <span id="keysStatus" class="meta"></span>
           <button class="primary" value="save">Enregistrer</button>
         </div>
       </form>

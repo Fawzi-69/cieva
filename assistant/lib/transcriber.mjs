@@ -11,12 +11,14 @@
 
 import WebSocket from 'ws';
 
-const KEY = process.env.DEEPGRAM_API_KEY || '';
+// Lus a chaque ouverture de flux : dans l'app installee, la cle se regle a
+// chaud depuis l'ecran de reglages.
+const currentKey = () => process.env.DEEPGRAM_API_KEY || '';
 // Surchargeable pour viser un Deepgram auto-heberge, ou tout service qui
 // parle le meme protocole.
-const ENDPOINT = process.env.DEEPGRAM_URL || 'wss://api.deepgram.com/v1/listen';
+const currentEndpoint = () => process.env.DEEPGRAM_URL || 'wss://api.deepgram.com/v1/listen';
 
-export const sttAvailable = Boolean(KEY);
+export const sttAvailable = () => Boolean(currentKey());
 export const SAMPLE_RATE = 16000;
 
 /** Deepgram ferme un flux muet : un signe de vie regulier le tient ouvert. */
@@ -36,13 +38,14 @@ export class LiveTranscriber {
    * @param {(message: string) => void} options.onError
    */
   constructor({ lang = 'fr', onInterim, onFinal, onError } = {}) {
-    if (!KEY) throw new Error('DEEPGRAM_API_KEY absente');
+    const key = currentKey();
+    if (!key) throw new Error('DEEPGRAM_API_KEY absente');
 
     this.onInterim = onInterim;
     this.onFinal = onFinal;
     this.onError = onError;
 
-    const url = new URL(ENDPOINT);
+    const url = new URL(currentEndpoint());
     url.searchParams.set('model', 'nova-3');
     url.searchParams.set('language', lang === 'en' ? 'en' : 'fr');
     url.searchParams.set('encoding', 'linear16');
@@ -55,7 +58,7 @@ export class LiveTranscriber {
     // assez long pour ne pas hacher une phrase qui respire.
     url.searchParams.set('endpointing', '300');
 
-    this.#socket = new WebSocket(url, { headers: { Authorization: `Token ${KEY}` } });
+    this.#socket = new WebSocket(url, { headers: { Authorization: `Token ${key}` } });
 
     this.#socket.on('open', () => {
       for (const chunk of this.#queue) this.#socket.send(chunk);

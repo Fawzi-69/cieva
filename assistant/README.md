@@ -18,32 +18,92 @@ partage d'écran. Rien n'est hébergé, rien n'est enregistré sur disque.
            Claude Opus 5             en fond, rythme plus lent
 ```
 
-## Démarrer
+## Installer l'app
 
-Deux façons de lancer, même moteur.
+Plus de terminal ni de `npm` : un installeur par plateforme.
+
+### Récupérer l'installeur
+
+Les installeurs sont fabriqués par GitHub Actions (workflow
+`.github/workflows/copilote.yml`) à chaque modification de `assistant/` :
+
+1. Onglet **Actions** du dépôt → **Copilote — installeurs** → la dernière
+   exécution verte.
+2. En bas, section **Artifacts** : `Copilote-mac` ou `Copilote-win`. C'est un
+   `.zip` qui contient l'installeur.
+
+| Fichier | Pour |
+|---|---|
+| `Copilote-<version>-arm64.dmg` | Mac Apple Silicon (M1 et suivants) |
+| `Copilote-<version>-x64.dmg` | Mac Intel |
+| `Copilote-<version>-installation.exe` | Windows 10 / 11 |
+
+Pour une version durable plutôt qu'un artefact gardé 30 jours, poussez un tag :
+`git tag copilote-v0.2.0 && git push origin copilote-v0.2.0`. Une **Release**
+GitHub est alors publiée avec les trois fichiers.
+
+> Le dépôt est public : artefacts et Releases sont téléchargeables par
+> d'autres. Ils ne contiennent aucune clé — elles se saisissent dans l'app et
+> restent sur votre machine.
+
+### Première ouverture : l'app n'est pas signée
+
+Signer auprès d'Apple demande un compte développeur payant (99 $/an), et
+auprès de Microsoft un certificat. Sans eux, chaque système bloque une fois.
+
+**macOS** — glissez Copilote dans Applications, ouvrez-le : macOS refuse.
+Allez dans **Réglages Système → Confidentialité et sécurité**, tout en bas :
+« Copilote a été bloqué » → **Ouvrir quand même**. Une seule fois.
+
+Si macOS dit que l'app est « endommagée » (fichier en quarantaine après
+téléchargement), dans le Terminal :
+
+```bash
+xattr -dr com.apple.quarantine /Applications/Copilote.app
+```
+
+**Windows** — SmartScreen affiche « Windows a protégé votre ordinateur » :
+**Informations complémentaires** → **Exécuter quand même**.
+
+### Autorisations macOS
+
+- **Micro** : demandé au premier lancement.
+- **Son de la visio** (canal Eux) : passe par l'enregistrement d'écran.
+  Réglages Système → Confidentialité et sécurité → **Enregistrement de l'écran
+  et audio système** → cochez Copilote, puis relancez l'app.
+
+Sur une app non signée, macOS peut redemander ces autorisations après chaque
+mise à jour : il voit chaque version comme une app différente.
+
+### Premier lancement
+
+L'app s'installe dans la **barre de menus** (macOS) ou la **zone de
+notification** (Windows) : pas d'icône dans le Dock ni la barre des tâches.
+L'écran **Réglages** s'ouvre de lui-même : collez votre clé Anthropic, et votre
+clé Deepgram si vous voulez les deux voix séparées.
+
+Les clés sont chiffrées par le trousseau du système (Trousseau macOS, DPAPI
+Windows) et la fenêtre n'en affiche jamais que les quatre derniers caractères.
+
+Menu de l'icône : afficher / masquer la fenêtre, Réglages, **Hors capture
+d'écran** (à cocher ou décocher à chaud), **Lancer à l'ouverture de session**,
+Quitter. Fermer la fenêtre ne quitte pas l'app : on la quitte par ce menu.
+
+## Lancer depuis le code
+
+Pour développer, ou si vous préférez le navigateur :
 
 ```bash
 cd assistant
 npm install
 cp .env.example .env        # puis renseignez ANTHROPIC_API_KEY
+npm start                   # dans le navigateur : http://127.0.0.1:4321
+npm run desktop             # en fenêtre flottante, comme l'app installée
+npm run dist                # fabrique l'installeur de la plateforme courante
 ```
 
-**Dans le navigateur** — le plus simple, pour un second écran :
-
-```bash
-npm start                   # http://127.0.0.1:4321
-```
-
-Ouvrez la page dans **Chrome ou Edge** (la reconnaissance vocale du navigateur
-n'existe pas ailleurs), renseignez le **Dossier** (touche `P`), cliquez
-**Écouter**. `C` passe en compact : la transcription disparaît, il ne reste que
-la réponse.
-
-**En fenêtre flottante** — invisible dans un partage d'écran :
-
-```bash
-cd desktop && npm install && npm start
-```
+Dans le navigateur, ouvrez la page dans **Chrome ou Edge**, renseignez le
+**Dossier** (touche `P`), cliquez **Écouter**. `C` passe en compact.
 
 ## La fenêtre flottante
 
@@ -65,8 +125,8 @@ Côté visio : Meet, Teams et QuickTime respectent le drapeau par défaut. **Zoo
 demande d'activer « Advanced capture with window filtering »** dans ses
 réglages pour l'honorer.
 
-`COPILOT_NO_PROTECT=1 npm start` (ou `npm run start:visible`) rend la fenêtre
-capturable à nouveau — pratique pour filmer une démo de l'outil.
+Pour filmer une démo de l'outil, décochez **Hors capture d'écran** dans le menu
+de l'icône : la fenêtre redevient capturable, sans redémarrer.
 
 ### Raccourcis globaux
 
@@ -83,8 +143,8 @@ Teams pendant que le copilote travaille.
 | `Cmd/Ctrl + Shift + O` | cycler l'opacité (100 / 85 / 65 %) |
 | `Cmd/Ctrl + Shift + ↑↓←→` | déplacer la fenêtre par pas de 40 px |
 
-Vérifier le câblage sans piloter l'interface : `COPILOT_SMOKE=1 npm start`
-affiche une ligne `SMOKE {...}` avec l'état de la fenêtre puis quitte.
+Vérifier le câblage sans piloter l'interface : `COPILOT_SMOKE=1 npm run
+desktop` affiche une ligne `SMOKE {...}` avec l'état de la fenêtre puis quitte.
 
 ## Les deux lanes
 
@@ -203,7 +263,11 @@ côté serveur aussi : l'appel abandonné n'est pas payé jusqu'au bout.
 (Dans la fenêtre flottante, les mêmes actions passent par les raccourcis
 globaux listés plus haut, qui marchent sans focus.)
 
-## Réglages (`.env`)
+## Réglages du lancement depuis le code (`.env`)
+
+Dans l'app installée, tout passe par l'écran **Réglages** : ce fichier ne sert
+que pour `npm start` et `npm run desktop`. Si les deux existent, l'écran
+Réglages l'emporte.
 
 | Variable | Défaut | Rôle |
 |---|---|---|
@@ -275,9 +339,21 @@ zh, vi.
 
 ```bash
 npm run check   # syntaxe de tous les modules
-npm test        # 19 tests : formats, étiquetage par locuteur, et la chaîne
-                # de transcription complète contre un faux service
+npm test        # 34 tests : formats, étiquetage par locuteur, chaîne de
+                # transcription contre un faux service, refus des autres
+                # origines, et stockage chiffré des clés
 ```
+
+La CI rejoue ces tests avant chaque construction d'installeur.
+
+### Sécurité du serveur local
+
+Le serveur n'écoute que sur `127.0.0.1`, mais n'importe quelle page ouverte
+dans votre navigateur peut viser cette adresse — un POST en `text/plain` part
+sans contrôle CORS, et les WebSockets n'y sont pas soumises du tout. Le serveur
+refuse donc toute requête dont l'en-tête `Origin` n'est pas le sien : un site
+tiers ne peut pas consommer vos crédits Anthropic ou Deepgram. Dans l'app
+installée, le port est en plus choisi au hasard à chaque lancement.
 
 ## Limites connues
 
