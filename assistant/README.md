@@ -79,8 +79,10 @@ mise à jour : il voit chaque version comme une app différente.
 
 L'app s'installe dans la **barre de menus** (macOS) ou la **zone de
 notification** (Windows) : pas d'icône dans le Dock ni la barre des tâches.
-L'écran **Réglages** s'ouvre de lui-même : collez votre clé Anthropic, et votre
-clé Deepgram si vous voulez les deux voix séparées.
+L'écran **Réglages** s'ouvre de lui-même : collez votre clé Anthropic et votre
+clé Deepgram. **Dans l'app, les deux sont nécessaires** : Electron n'embarque
+pas la reconnaissance vocale de Chrome, donc sans Deepgram l'app n'entend rien.
+Le repli sans clé n'existe que dans le navigateur (`npm start`).
 
 Les clés sont chiffrées par le trousseau du système (Trousseau macOS, DPAPI
 Windows) et la fenêtre n'en affiche jamais que les quatre derniers caractères.
@@ -357,9 +359,10 @@ installée, le port est en plus choisi au hasard à chaque lancement.
 
 ## Limites connues
 
-- **Sans `DEEPGRAM_API_KEY`**, on retombe sur la Web Speech API : Chrome/Edge
-  seulement, un seul canal, micro par défaut du système, pas de choix
-  d'appareil. Le panneau audio l'affiche en clair.
+- **Sans `DEEPGRAM_API_KEY`**, dans le navigateur, on retombe sur la Web Speech
+  API : Chrome/Edge seulement, un seul canal, micro par défaut du système, pas
+  de choix d'appareil. Le panneau audio l'affiche en clair. **Dans l'app, pas
+  de repli** : Electron n'a pas ce service, la clé Deepgram est nécessaire.
 - Si vos haut-parleurs sont ouverts (pas de casque), le canal **Vous** capte
   aussi la voix de l'interlocuteur : elle sera comptée comme la vôtre.
   L'annulation d'écho du micro limite les dégâts sans les supprimer. Au casque,

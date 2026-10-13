@@ -477,8 +477,16 @@ async function startChannel(id) {
   if (channels[id]?.active) return;
 
   if (!state.health?.sttAvailable) {
-    // Sans cle de transcription, seul le repli Web Speech API est possible,
-    // et il ne sait pas choisir d'appareil.
+    // Electron n'embarque pas le service de reconnaissance vocale de Chrome
+    // (il depend de cles Google propres a Chrome) : dans l'app, le repli
+    // Web Speech API echouerait en silence. On le dit franchement.
+    if (window.copilotShell) {
+      throw new Error(
+        'Dans l’app, la transcription passe par Deepgram : ajoutez votre clé dans les Réglages (⚙).',
+      );
+    }
+    // Dans le navigateur, seul le repli Web Speech API est possible sans
+    // cle, et il ne sait pas choisir d'appareil.
     if (id === 'them') {
       throw new Error(
         'Le canal « Eux » demande DEEPGRAM_API_KEY dans assistant/.env. Sans elle, seul le micro par défaut fonctionne.',
@@ -634,6 +642,11 @@ function paintChannelState(id) {
   // La Web Speech API ignore l'appareil demande : autant le dire.
   el.micDevice.disabled = Boolean(recognition) || !state.health?.sttAvailable;
   el.micHint.hidden = state.health?.sttAvailable !== false;
+  if (window.copilotShell && !el.micHint.hidden) {
+    // Dans l'app il n'y a ni .env ni repli navigateur : seul le reglage compte.
+    el.micHint.textContent =
+      'Aucune clé Deepgram : l’app ne peut pas transcrire. Ajoutez-la dans les Réglages (⚙).';
+  }
 }
 
 /* ---------------- cycle de vie ---------------- */

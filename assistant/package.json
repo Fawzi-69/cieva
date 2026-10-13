@@ -15,7 +15,6 @@
   "scripts": {
     "start": "node server.mjs",
     "desktop": "electron .",
-    "desktop:visible": "COPILOT_NO_PROTECT=1 electron .",
     "dist": "electron-builder --publish never",
     "dist:mac": "electron-builder --mac --publish never",
     "dist:win": "electron-builder --win --publish never",

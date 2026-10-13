@@ -11,11 +11,16 @@ name: Copilote — installeurs
 # Le .dmg ne peut se construire que sur un Mac : d'où les runners macOS.
 on:
   push:
+    # `branches` est indispensable : avec `tags` seul, GitHub ne declenche
+    # le workflow que sur les tags et ignore tous les pushes de branche.
+    branches:
+      - '**'
+    tags:
+      - 'copilote-v*'
+    # Ne s'applique qu'aux branches : un push de tag declenche toujours.
     paths:
       - 'assistant/**'
       - '.github/workflows/copilote.yml'
-    tags:
-      - 'copilote-v*'
   workflow_dispatch:
 
 permissions:
