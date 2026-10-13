@@ -57,18 +57,6 @@ public/
 | Compte Cal.com / Formspree | `Cta.jsx` (remplacer les `mailto:`) |
 | Captures produits réelles | `Products.jsx` (Plan 2 : études de cas) |
 
-## Copilote (outil interne, hors site)
-
-`assistant/` — assistant de réunion temps réel : écoute la conversation
-(micro ou audio d'un onglet), transcrit, et affiche en direct la réponse à
-dire, ancrée sur un dossier de faits que vous fournissez. Serveur Node local
-+ page navigateur, indépendant du site statique ; rien n'est déployé sur
-Pages. Détails et réglages : `assistant/README.md`.
-
-```bash
-npm run assistant      # http://127.0.0.1:4321
-```
-
 ## Design
 
 Esthétique **« Constellation »** : fond navy étoilé, dégradés bleu (`#009FE3`) →
