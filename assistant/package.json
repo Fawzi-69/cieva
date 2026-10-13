@@ -1,0 +1,90 @@
+{
+  "name": "copilote",
+  "productName": "Copilote",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Copilote temps reel : ecoute la conversation, affiche la reponse a dire.",
+  "author": "Fawzi Baliouz",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Fawzi-69/cieva.git",
+    "directory": "assistant"
+  },
+  "main": "desktop/main.mjs",
+  "scripts": {
+    "start": "node server.mjs",
+    "desktop": "electron .",
+    "dist": "electron-builder --publish never",
+    "dist:mac": "electron-builder --mac --publish never",
+    "dist:win": "electron-builder --win --publish never",
+    "test": "node --test test/format.test.mjs test/stream.test.mjs test/settings.test.mjs",
+    "check": "node --check server.mjs && node --check lib/claude.mjs && node --check lib/prompts.mjs && node --check lib/transcriber.mjs && node --check web/format.js && node --check web/audio.js && node --check web/app.js && node --check web/pcm-worklet.js && node --check desktop/main.mjs && node --check desktop/settings.mjs && node --check desktop/preload.cjs"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.127.0",
+    "ws": "^8.21.3"
+  },
+  "devDependencies": {
+    "electron": "^44.7.0",
+    "electron-builder": "^26.15.3"
+  },
+  "build": {
+    "appId": "fr.fawzi.copilote",
+    "productName": "Copilote",
+    "copyright": "Usage personnel",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "server.mjs",
+      "lib/**",
+      "web/**",
+      "desktop/**",
+      "package.json"
+    ],
+    "mac": {
+      "category": "public.app-category.productivity",
+      "target": [
+        {
+          "target": "dmg",
+          "arch": ["arm64", "x64"]
+        }
+      ],
+      "identity": "-",
+      "hardenedRuntime": false,
+      "gatekeeperAssess": false,
+      "extendInfo": {
+        "LSUIElement": true,
+        "NSMicrophoneUsageDescription": "Copilote écoute votre micro pour transcrire ce que vous dites.",
+        "NSAudioCaptureUsageDescription": "Copilote écoute le son de la visio pour transcrire ce que dit votre interlocuteur."
+      }
+    },
+    "dmg": {
+      "title": "Copilote ${version}",
+      "artifactName": "Copilote-${version}-${arch}.dmg"
+    },
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "artifactName": "Copilote-${version}-installation.exe"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "createDesktopShortcut": true,
+      "shortcutName": "Copilote",
+      "deleteAppDataOnUninstall": false
+    },
+    "linux": {
+      "target": ["AppImage"],
+      "category": "Office",
+      "artifactName": "Copilote-${version}.AppImage"
+    }
+  }
+}

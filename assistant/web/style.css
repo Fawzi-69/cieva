@@ -1,0 +1,746 @@
+/* Palette « Constellation » du design system Cieva, en version outil :
+   dense, sombre, lisible du coin de l'oeil. */
+:root {
+  --bg: #0b1430;
+  --bg-2: #0f1b3d;
+  --ink: #f4f7ff;
+  --ink-2: #eaf0ff;
+  --body: #a3b2d4;
+  --meta: #6e7ea3;
+  --kicker: #85a8e6;
+  --line: rgba(160, 180, 230, 0.16);
+  --glass: rgba(255, 255, 255, 0.04);
+  --accent-a: #3d74ff;
+  --accent-b: #7c5cff;
+  --live: #12a594;
+  --warn: #ffb545;
+  --bar-h: 52px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  background:
+    radial-gradient(1100px 600px at 80% -10%, rgba(124, 92, 255, 0.14), transparent),
+    radial-gradient(900px 500px at 10% 0%, rgba(60, 90, 200, 0.28), transparent),
+    linear-gradient(160deg, var(--bg), var(--bg-2));
+  color: var(--ink-2);
+  font: 15px/1.5 "Inter", "Hanken Grotesk", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
+  overflow: hidden;
+}
+
+/* ---------- barre ---------- */
+
+.bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  height: var(--bar-h);
+  padding: 0 12px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(11, 20, 48, 0.72);
+  backdrop-filter: blur(10px);
+  flex: 0 0 auto;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.bar::-webkit-scrollbar {
+  display: none;
+}
+
+.grow {
+  flex: 1;
+}
+
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  color: #fff;
+  font: 600 14px/1 "Space Grotesk", system-ui, sans-serif;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(61, 116, 255, 0.28);
+}
+
+.toggle .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.6);
+}
+
+body.live .toggle {
+  background: rgba(18, 165, 148, 0.16);
+  color: #8ff0e2;
+  box-shadow: none;
+}
+
+body.live .toggle .dot {
+  background: var(--live);
+  animation: pulse 1.6s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--meta);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.field select {
+  padding: 5px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+}
+
+.switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--body);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.switch input {
+  accent-color: var(--accent-b);
+}
+
+.ghost {
+  padding: 6px 11px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--body);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ghost:hover,
+.ghost:focus-visible {
+  border-color: rgba(124, 92, 255, 0.55);
+  color: var(--ink);
+}
+
+.ghost[aria-pressed="true"] {
+  border-color: rgba(124, 92, 255, 0.6);
+  color: var(--ink);
+  background: rgba(124, 92, 255, 0.14);
+}
+
+.meta {
+  color: var(--meta);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- panneaux ---------- */
+
+.panes {
+  display: grid;
+  grid-template-columns: minmax(260px, 34%) 1fr;
+  min-height: 0;
+  flex: 1;
+}
+
+.pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 12px 14px 0;
+}
+
+.pane + .pane {
+  border-left: 1px solid var(--line);
+}
+
+.pane h2 {
+  margin: 0 0 8px;
+  color: var(--kicker);
+  font: 600 11px/1 "Space Grotesk", system-ui, sans-serif;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.scroll {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(160, 180, 230, 0.25) transparent;
+}
+
+/* ---------- panneau audio ---------- */
+
+.audio {
+  flex: 0 0 auto;
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.audio-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 5px 0;
+}
+
+.audio-row .src {
+  flex: 1;
+  min-width: 0;
+  color: var(--meta);
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+select.src {
+  flex: 1;
+  padding: 4px 8px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--glass);
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 12.5px;
+}
+
+select.src:disabled {
+  opacity: 0.45;
+}
+
+/* Vu-metre : une barre remplie a hauteur de --level. */
+.meter {
+  width: 72px;
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(160, 180, 230, 0.16);
+  overflow: hidden;
+}
+
+.meter i {
+  display: block;
+  width: calc(var(--level, 0) * 100%);
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--live), var(--accent-b));
+  transition: width 80ms linear;
+}
+
+.audio-row.on .meter {
+  background: rgba(18, 165, 148, 0.2);
+}
+
+.who {
+  display: inline-block;
+  min-width: 42px;
+  font: 600 12px/1 "Space Grotesk", system-ui, sans-serif;
+}
+
+.who.them {
+  color: var(--kicker);
+}
+
+.who.you {
+  color: #8ff0e2;
+}
+
+.audio-foot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+.hintline {
+  flex: 1 1 100%;
+  margin: 4px 0 0;
+  color: var(--warn);
+  font-size: 12px;
+}
+
+.hintline code {
+  font-size: 11.5px;
+}
+
+/* ---------- transcription ---------- */
+
+.transcript .scroll p {
+  margin: 0 0 7px;
+  color: var(--body);
+  font-size: 14px;
+}
+
+.transcript .turn .who {
+  min-width: 0;
+  margin-right: 7px;
+  font-size: 10.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* Ce que vous avez dit s'efface : l'oeil doit aller a l'autre voix. */
+.transcript .turn.you {
+  color: var(--meta);
+}
+
+.transcript .scroll p.question {
+  color: var(--ink);
+  border-left: 2px solid var(--accent-b);
+  padding-left: 8px;
+}
+
+.interim {
+  margin: 4px 0 12px;
+  min-height: 1.2em;
+  color: var(--meta);
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* ---------- reponses ---------- */
+
+.card {
+  margin-bottom: 10px;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--glass);
+}
+
+.card.pending {
+  border-color: rgba(124, 92, 255, 0.45);
+}
+
+.card .q {
+  margin: 0 0 8px;
+  color: var(--meta);
+  font-size: 12px;
+}
+
+.card .lead {
+  margin: 0;
+  color: var(--ink);
+  font: 600 19px/1.35 "Space Grotesk", system-ui, sans-serif;
+}
+
+.card ul {
+  margin: 9px 0 0;
+  padding-left: 18px;
+}
+
+.card li {
+  margin-bottom: 5px;
+  color: var(--ink-2);
+  font-size: 14.5px;
+}
+
+.card .caution {
+  margin: 9px 0 0;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+  color: var(--warn);
+  font-size: 13.5px;
+}
+
+.card .clarify {
+  margin: 0;
+  color: var(--kicker);
+  font-size: 16px;
+}
+
+.card .tag {
+  float: right;
+  color: var(--meta);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.card.error {
+  border-color: rgba(255, 120, 120, 0.4);
+  color: #ffb3b3;
+}
+
+.card.skip {
+  color: var(--meta);
+  font-size: 13px;
+}
+
+.empty {
+  color: var(--meta);
+  font-size: 14px;
+  max-width: 44ch;
+}
+
+/* ---------- pied ---------- */
+
+.hint {
+  flex: 0 0 auto;
+  padding: 7px 14px;
+  border-top: 1px solid var(--line);
+  color: var(--meta);
+  font-size: 11.5px;
+}
+
+kbd {
+  padding: 1px 5px;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--glass);
+  font: inherit;
+  font-size: 11px;
+}
+
+/* ---------- lane des suppositions ---------- */
+
+.anticipation {
+  flex: 0 0 auto;
+  margin-bottom: 12px;
+  padding: 10px 12px;
+  border: 1px solid rgba(124, 92, 255, 0.28);
+  border-radius: 12px;
+  background: linear-gradient(
+    180deg,
+    rgba(124, 92, 255, 0.11),
+    rgba(124, 92, 255, 0.03)
+  );
+}
+
+.anticipation.loading {
+  border-color: rgba(124, 92, 255, 0.55);
+}
+
+.anticipation header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.anticipation h2 {
+  margin: 0;
+  color: #b9a4ff;
+}
+
+.age {
+  color: var(--meta);
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+}
+
+.ant-cible {
+  margin: 0;
+  color: var(--ink);
+  font-size: 14.5px;
+  font-weight: 600;
+}
+
+.ant-suites {
+  margin: 7px 0 0;
+  padding-left: 16px;
+  list-style: none;
+}
+
+.ant-suites li {
+  position: relative;
+  margin-bottom: 4px;
+  color: var(--ink-2);
+  font-size: 13.5px;
+}
+
+.ant-suites li::before {
+  content: "→";
+  position: absolute;
+  left: -16px;
+  color: #9b86ff;
+}
+
+.ant-line {
+  margin: 7px 0 0;
+  font-size: 13px;
+}
+
+.ant-prep {
+  color: #8ff0e2;
+}
+
+.ant-risk {
+  color: var(--warn);
+}
+
+/* ---------- mode compact : fenetre etroite, second ecran ---------- */
+
+body.compact .panes {
+  grid-template-columns: 1fr;
+}
+
+body.compact .transcript,
+body.compact .hint {
+  display: none;
+}
+
+/* Seulement dans la barre : les reglages et le panneau audio gardent leurs
+   interrupteurs, sinon le mode rapide et le choix des canaux disparaissent
+   dans l'app (toujours en compact). */
+body.compact .bar .field,
+body.compact .bar .switch {
+  display: none;
+}
+
+body.compact .card .lead {
+  font-size: 17px;
+}
+
+/* ---------- coque bureau : fenetre flottante ---------- */
+
+/* La fenetre Electron est transparente et sans cadre : la page dessine
+   elle-meme sa carte, ses coins et sa bordure. */
+body.overlay {
+  padding: 8px;
+  background: transparent;
+}
+
+body.overlay .bar {
+  border: 1px solid var(--line);
+  border-bottom: 0;
+  border-radius: 14px 14px 0 0;
+  background: rgba(11, 20, 48, 0.9);
+  /* Toute la barre sert de poignee de deplacement, sauf les commandes. */
+  -webkit-app-region: drag;
+}
+
+body.overlay .bar button,
+body.overlay .bar select,
+body.overlay .bar input {
+  -webkit-app-region: no-drag;
+}
+
+body.overlay .panes {
+  border: 1px solid var(--line);
+  border-top: 0;
+  border-radius: 0 0 14px 14px;
+  background: rgba(11, 20, 48, 0.9);
+  backdrop-filter: blur(14px);
+  overflow: hidden;
+}
+
+/* Les raccourcis globaux (Cmd/Ctrl+Shift+Espace / D / A) remplacent ces
+   boutons : dans une fenetre de 460 px, la barre respire mieux sans eux. */
+body.overlay #ask,
+body.overlay #deep,
+body.overlay #anticipate,
+body.overlay #compact {
+  display: none;
+}
+
+/* Le texte d'etat cede sa place aux boutons : il se tronque plutot que de
+   pousser Dossier et Reglages hors de la fenetre. */
+body.overlay .bar {
+  gap: 6px;
+}
+
+body.overlay .bar .ghost {
+  padding: 6px 9px;
+}
+
+body.overlay .bar .ghost.icon {
+  padding: 4px 8px;
+  font-size: 15px;
+  line-height: 1;
+}
+
+body.overlay .bar .grow {
+  display: none;
+}
+
+body.overlay .bar .meta {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Mode traversant : la souris passe a travers, on le signale. */
+body.overlay.through .bar {
+  border-color: rgba(18, 165, 148, 0.5);
+}
+
+.shield {
+  padding: 3px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+.shield.on {
+  background: rgba(18, 165, 148, 0.16);
+  color: #8ff0e2;
+}
+
+.shield.off {
+  background: rgba(255, 181, 69, 0.14);
+  color: var(--warn);
+}
+
+/* ---------- dossier ---------- */
+
+dialog {
+  width: min(680px, 92vw);
+  padding: 0;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: var(--bg-2);
+  color: var(--ink-2);
+}
+
+dialog::backdrop {
+  background: rgba(6, 11, 28, 0.7);
+}
+
+dialog form {
+  padding: 18px 20px 20px;
+}
+
+dialog h2 {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font: 600 18px/1.2 "Space Grotesk", system-ui, sans-serif;
+}
+
+dialog p {
+  margin: 0 0 12px;
+  color: var(--body);
+  font-size: 13.5px;
+}
+
+textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--ink-2);
+  font: 13.5px/1.55 ui-monospace, SFMono-Regular, Menlo, monospace;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 12px;
+}
+
+.keyfield {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 14px;
+}
+
+.keyfield span {
+  color: var(--ink);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+
+.keyfield em {
+  margin-left: 6px;
+  color: var(--meta);
+  font-size: 11.5px;
+  font-style: normal;
+  font-weight: 400;
+}
+
+.keyfield input {
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, 0.22);
+  color: var(--ink-2);
+  font: 13px/1.4 ui-monospace, SFMono-Regular, Menlo, monospace;
+}
+
+.keyfield small {
+  color: var(--meta);
+  font-size: 12px;
+}
+
+.keyfield small a {
+  color: var(--kicker);
+}
+
+#anthropicNow,
+#deepgramNow {
+  color: #8ff0e2;
+}
+
+.primary {
+  padding: 8px 18px;
+  border: 0;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+  color: #fff;
+  font: 600 14px/1 "Space Grotesk", system-ui, sans-serif;
+  cursor: pointer;
+}
+
+@media (max-width: 820px) {
+  .panes {
+    grid-template-columns: 1fr;
+  }
+  .transcript,
+  .hint {
+    display: none;
+  }
+  /* Dans la barre seulement : ailleurs, ces libelles portent l'information
+     (« Eux » / « Vous », mode rapide). */
+  .bar .field span,
+  .bar .switch span {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+  }
+}

@@ -1,0 +1,107 @@
+name: Copilote — installeurs
+
+# Construit l'app de bureau du copilote (assistant/) :
+#   Windows → Copilote-<version>-installation.exe
+#
+# Chaque push qui touche assistant/ produit l'installeur en « artefact »
+# de l'exécution (onglet Actions, 30 jours). Un tag copilote-v* publie en
+# plus une Release GitHub avec le fichier attaché.
+#
+# Le .dmg macOS n'est plus construit ici (voir la matrice plus bas) : sur un
+# Mac, `cd assistant && npm run dist:mac` le produit dans assistant/dist/.
+on:
+  push:
+    # `branches` est indispensable : avec `tags` seul, GitHub ne declenche
+    # le workflow que sur les tags et ignore tous les pushes de branche.
+    branches:
+      - '**'
+    tags:
+      - 'copilote-v*'
+    # Ne s'applique qu'aux branches : un push de tag declenche toujours.
+    paths:
+      - 'assistant/**'
+      - '.github/workflows/copilote.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: copilote-${{ github.ref }}
+  cancel-in-progress: true
+
+defaults:
+  run:
+    working-directory: assistant
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: assistant/package-lock.json
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+
+  build:
+    needs: test
+    name: build (${{ matrix.target }})
+    strategy:
+      fail-fast: false
+      matrix:
+        # Windows seulement. macOS est retire : les runners macOS ne prenaient
+        # pas la tache (annulee apres 15 min de file d'attente) et l'app sert
+        # sur PC. Pour le remettre, ajouter :
+        #   - os: macos-latest
+        #     target: mac
+        #     files: assistant/dist/*.dmg
+        include:
+          - os: windows-latest
+            target: win
+            files: assistant/dist/*.exe
+    runs-on: ${{ matrix.os }}
+    env:
+      # Signature ad hoc (identity "-" dans package.json) : on n'a pas de
+      # certificat Apple, inutile d'en chercher un dans le trousseau.
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: assistant/package-lock.json
+      - run: npm ci
+      - run: npm run dist:${{ matrix.target }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Copilote-${{ matrix.target }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+          retention-days: 30
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/copilote-v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installeurs
+          merge-multiple: true
+      - name: Publier la Release
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" installeurs/* \
+            --repo "${GITHUB_REPOSITORY}" \
+            --title "Copilote ${GITHUB_REF_NAME#copilote-v}" \
+            --notes "Installeur Windows. Voir assistant/README.md pour la première ouverture d'une app non signée."
