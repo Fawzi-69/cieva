@@ -29,18 +29,17 @@ Les installeurs sont fabriqués par GitHub Actions (workflow
 
 1. Onglet **Actions** du dépôt → **Copilote — installeurs** → la dernière
    exécution verte.
-2. En bas, section **Artifacts** : `Copilote-mac` ou `Copilote-win`. C'est un
-   `.zip` qui contient l'installeur.
+2. En bas, section **Artifacts** : `Copilote-win`. C'est un `.zip` qui
+   contient `Copilote-<version>-installation.exe` (Windows 10 / 11).
 
-| Fichier | Pour |
-|---|---|
-| `Copilote-<version>-arm64.dmg` | Mac Apple Silicon (M1 et suivants) |
-| `Copilote-<version>-x64.dmg` | Mac Intel |
-| `Copilote-<version>-installation.exe` | Windows 10 / 11 |
+**macOS** : la CI ne construit plus le `.dmg` (les runners macOS ne prenaient
+pas la tâche). La configuration est restée en place : sur un Mac,
+`cd assistant && npm install && npm run dist:mac` produit les `.dmg` Apple
+Silicon et Intel dans `assistant/dist/`.
 
 Pour une version durable plutôt qu'un artefact gardé 30 jours, poussez un tag :
 `git tag copilote-v0.2.0 && git push origin copilote-v0.2.0`. Une **Release**
-GitHub est alors publiée avec les trois fichiers.
+GitHub est alors publiée avec l'installeur.
 
 > Le dépôt est public : artefacts et Releases sont téléchargeables par
 > d'autres. Ils ne contiennent aucune clé — elles se saisissent dans l'app et

@@ -1,14 +1,14 @@
 name: Copilote — installeurs
 
 # Construit l'app de bureau du copilote (assistant/) :
-#   macOS   → Copilote-<version>-arm64.dmg (Apple Silicon) et -x64.dmg (Intel)
 #   Windows → Copilote-<version>-installation.exe
 #
-# Chaque push qui touche assistant/ produit les installeurs en « artefacts »
+# Chaque push qui touche assistant/ produit l'installeur en « artefact »
 # de l'exécution (onglet Actions, 30 jours). Un tag copilote-v* publie en
-# plus une Release GitHub avec les fichiers attachés.
+# plus une Release GitHub avec le fichier attaché.
 #
-# Le .dmg ne peut se construire que sur un Mac : d'où les runners macOS.
+# Le .dmg macOS n'est plus construit ici (voir la matrice plus bas) : sur un
+# Mac, `cd assistant && npm run dist:mac` le produit dans assistant/dist/.
 on:
   push:
     # `branches` est indispensable : avec `tags` seul, GitHub ne declenche
@@ -50,18 +50,20 @@ jobs:
 
   build:
     needs: test
+    name: build (${{ matrix.target }})
     strategy:
       fail-fast: false
       matrix:
+        # Windows seulement. macOS est retire : les runners macOS ne prenaient
+        # pas la tache (annulee apres 15 min de file d'attente) et l'app sert
+        # sur PC. Pour le remettre, ajouter :
+        #   - os: macos-latest
+        #     target: mac
+        #     files: assistant/dist/*.dmg
         include:
-          - os: macos-latest
-            target: mac
-            files: |
-              assistant/dist/*.dmg
           - os: windows-latest
             target: win
-            files: |
-              assistant/dist/*.exe
+            files: assistant/dist/*.exe
     runs-on: ${{ matrix.os }}
     env:
       # Signature ad hoc (identity "-" dans package.json) : on n'a pas de
@@ -102,4 +104,4 @@ jobs:
           gh release create "${GITHUB_REF_NAME}" installeurs/* \
             --repo "${GITHUB_REPOSITORY}" \
             --title "Copilote ${GITHUB_REF_NAME#copilote-v}" \
-            --notes "Installeurs macOS (Apple Silicon et Intel) et Windows. Voir assistant/README.md pour la première ouverture d'une app non signée."
+            --notes "Installeur Windows. Voir assistant/README.md pour la première ouverture d'une app non signée."
